@@ -1,12 +1,14 @@
 const express = require("express");
-const UserRoute = require("./routes/user.router");
 const app = express();
+const UserRoute = require("./routes/user.router");
+const questionRouter = require('./routes/question.router');
 
-// ✅ Built-in middleware for parsing JSON and form data
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Routes
+// Routes
 app.use("/api/user", UserRoute);
+app.use("/api", questionRouter); // ✅ Clean base path
 
 module.exports = app;
