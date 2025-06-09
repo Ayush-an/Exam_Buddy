@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 // Section schema with sets now containing time limits per set
 const sectionSchema = new mongoose.Schema({
 name: {
@@ -52,7 +53,7 @@ default: null
  }
  ],
  validate: {
- validator: function (arr) {
+ validator: async function (arr) {
  const names = arr.map(s => s.name);
  const uniqueNames = new Set(names);
  return names.every(name => typeof name === 'string' && name.trim() !== '') && names.length === uniqueNames.size;
@@ -75,6 +76,7 @@ timestamps: true
 });
 // Question schema (question does not have its own timer anymore)
 const questionSchema = new mongoose.Schema({
+  
 category: {
 type: String,
 required: true,
@@ -209,4 +211,25 @@ await existingPaper.save();
 };
 const Question = mongoose.model('Question', questionSchema);
 const QuestionPaper = mongoose.model('QuestionPaper', questionPaperSchema);
-module.exports = { Question, QuestionPaper };
+/**
+ * Fetch questions filtered by category, section, and set.
+ * @param {String} category - Category name (e.g., 'Beginner')
+ * @param {String} section - Section name (e.g., 'Beginner Challenge')
+ * @param {String} set - Set name (e.g., 'Set 1')
+ * @returns {Promise<Array>} - List of questions
+ */
+const fetchQuestionsByCategorySectionSet = async (category, section, set) => {
+  if (!category || !section || !set) {
+    throw new Error("Category, section, and set are required.");
+  }
+
+  const questions = await Question.find({
+    category,
+    section,
+    set
+  }).lean();
+
+  return questions;
+};
+
+module.exports = { Question, QuestionPaper, fetchQuestionsByCategorySectionSet };

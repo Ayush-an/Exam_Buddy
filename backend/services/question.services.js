@@ -4,20 +4,13 @@ const mongoose = require('mongoose');
 async function createQuestion(questionData) {
   try {
     const { category, section, set } = questionData;
-    // Note: The validation for section and set being valid is now in the controller
-    // to leverage the req.body parsing from multer.
-    // If you want to keep validateSectionAndSet here, ensure it fetches from the database
-    // using the parsed data and that your controller passes correctly.
-    // For now, assuming controller's validation is sufficient.
-
-    const question = new Question(questionData);
+     const question = new Question(questionData);
     return await question.save();
   } catch (error) {
     console.error('Error creating question:', error);
     throw error;
   }
 }
-
 /**
  * Get all questions for a specific category, section, and set.
  * @param {string} category
