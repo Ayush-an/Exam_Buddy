@@ -34,7 +34,11 @@ const userSchema = new Schema(
     resetToken: { type: String },
     resetTokenExpiration: { type: Date },
     examHistory: [{
-      examId: { type: Schema.Types.ObjectId, ref: 'Exam' },
+      examId: { type: Schema.Types.ObjectId, ref: 'Exam' }, // Reference to an Exam document (if you have one)
+      // Added category, section, set for easier lookup and display in history
+      category: { type: String }, 
+      section: { type: String },
+      set: { type: String },
       answers: [{
         questionId: { type: Schema.Types.ObjectId, ref: 'Question' },
         selectedOption: String,
@@ -43,7 +47,7 @@ const userSchema = new Schema(
       score: Number,
       totalQuestions: Number,
       correctAnswers: Number,
-      duration: Number,
+      duration: Number, // duration of the exam attempt in seconds
       submittedAt: { type: Date, default: Date.now }
     }],
     profileImage: { type: String },
@@ -52,42 +56,44 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-// Password hashing before save
+// Password hashing before saving the user document
 userSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified (or is new)
   if (!this.isModified("password")) return next();
   try {
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(this.password, salt);
-    this.password = hash;
+    const salt = await bcrypt.genSalt(10); // Generate a salt
+    const hash = await bcrypt.hash(this.password, salt); // Hash the password with the salt
+    this.password = hash; // Store the hashed password
     next();
   } catch (err) {
-    next(err);
+    next(err); // Pass any errors to the next middleware
   }
 });
 
-// Password comparison method
+// Method to compare candidate password with the hashed password
 userSchema.methods.comparePassword = async function (candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
-    throw error;
+    throw error; // Re-throw any errors during comparison
   }
 };
 
-// Static method for login with mobile number and password
+// Static method for user login using mobile number and password
 userSchema.statics.loginWithMobile = async function (mobile, password) {
   const user = await this.findOne({ mobile });
-  if (!user) throw new Error('Invalid mobile number or password');
+  if (!user) throw new Error('Invalid mobile number or password'); // User not found
 
   const isMatch = await user.comparePassword(password);
-  if (!isMatch) throw new Error('Invalid mobile number or password');
+  if (!isMatch) throw new Error('Invalid mobile number or password'); // Password does not match
 
-  return user;
+  return user; // Return the user document if credentials are valid
 };
 
-// Update user by ID
+// Static method to update a user by their ID
 userSchema.statics.updateUserById = async function (id, updateData) {
   try {
+    // Find and update the user, return the new document and run validators
     const user = await this.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     return user;
   } catch (error) {
@@ -95,17 +101,17 @@ userSchema.statics.updateUserById = async function (id, updateData) {
   }
 };
 
-// Delete user by ID
+// Static method to delete a user by their ID
 userSchema.statics.deleteUserById = async function (id) {
   try {
     const result = await this.findByIdAndDelete(id);
-    return result;
+    return result; // Returns the deleted document or null if not found
   } catch (error) {
     throw new Error(`Failed to delete user: ${error.message}`);
   }
 };
 
-// Get user by ID
+// Static method to get a user by their ID
 userSchema.statics.getUserById = async function (id) {
   try {
     return await this.findById(id);
@@ -114,7 +120,7 @@ userSchema.statics.getUserById = async function (id) {
   }
 };
 
-// Get user by mobile number
+// Static method to get a user by their mobile number
 userSchema.statics.getUserByMobile = async function (mobile) {
   try {
     const user = await this.findOne({ mobile });
@@ -125,7 +131,7 @@ userSchema.statics.getUserByMobile = async function (mobile) {
   }
 };
 
-// Update user by mobile number
+// Static method to update a user by their mobile number
 userSchema.statics.updateUserByMobile = async function (mobile, updateData) {
   try {
     const user = await this.findOneAndUpdate(

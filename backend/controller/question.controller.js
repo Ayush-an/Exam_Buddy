@@ -370,19 +370,33 @@ async function fetchSetsByCategorySection(req, res) {
     res.status(500).json({ error: 'Failed to fetch sets' });
   }
 }
+const express = require('express');
+const app = express();
+app.get('/api/questions', async (req, res) => {
+  const { category, section, set } = req.query;
+  try {
+    const questions = await fetchQuestionsByCategorySectionSet(category, section, set);
+    res.json(questions);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = {
   createQuestion: require('./question.controller').createQuestion, // Ensure `createQuestion` is correctly exported
-  getQuestionsBySet,
   // Question Paper
   getAllQuestionPapers,
   getQuestionPapersByCategory,
   getSectionDetails,
   createOrUpdateQuestionPaper,
+
   // Questions
   createQuestion,
   getAllQuestions,
   getQuestionById,
   deleteQuestionById,
+  getQuestionsBySet,
+
   // Sets
   getSets,
   addSet,
@@ -390,9 +404,9 @@ module.exports = {
   updateSetTimeLimit,
   deleteSetTimeLimit,
   deleteSet,
+
   // Additional fetchers
   fetchAllCategories,
   fetchSectionsByCategory,
   fetchSetsByCategorySection,
 };
-
