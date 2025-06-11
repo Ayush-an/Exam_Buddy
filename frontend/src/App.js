@@ -28,7 +28,7 @@ function App() {
         <Route path="/user-signin" element={<UserSignIn />} />
         <Route path="/user-signup" element={<UserSignUp />} />
         <Route path="/exam" element={<AnswerPage />} /> {/* User's exam page */}
-
+ <Route path="/review/:userId/:attemptId" element={<AnswerPage />} />
         {/* Add any other general routes here */}
       </Routes>
     </Router>

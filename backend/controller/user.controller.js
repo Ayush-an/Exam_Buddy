@@ -6,90 +6,33 @@ const crypto = require("crypto");
 const mongoose = require('mongoose'); // For ObjectId validation
 
 
+
 exports.submitExamResults = async (req, res) => {
   try {
-    const { userId, category, section, set, examAttemptId, score, totalQuestions, correctAnswers, duration, answers } = req.body;
+    const {
+      userId, category, section, set, score,
+      totalQuestions, correctAnswers, duration, answers
+    } = req.body;
 
-    // --- Validation: Ensure all required fields are present and correctly formatted ---
-    if (!userId || !category || !section || !set || !examAttemptId ||
-        typeof score === 'undefined' || !totalQuestions || !correctAnswers ||
-        typeof duration === 'undefined' || !Array.isArray(answers) || answers.length === 0) {
-      console.error('Validation error: Missing or invalid required fields for exam attempt submission.');
-      return res.status(400).json({ message: 'Missing or invalid required exam attempt data.' });
-    }
-
-    // Validate userId format if it's expected to be a Mongoose ObjectId
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.error('Validation error: Invalid userId format provided:', userId);
-      return res.status(400).json({ message: 'Invalid User ID format.' });
-    }
-
-    // 1. Create a new ExamAttempt document
-    const newExamAttempt = await ExamAttempt.create({
-      userId,
-      category,
-      section,
-      set,
-      examAttemptId, // Unique identifier for this specific attempt from the frontend (e.g., ISO string)
-      score,
-      totalQuestions,
-      correctAnswers,
-      duration, // Duration in seconds
-      answers,  // Array of { questionId, selectedOption, isCorrect }
-      submittedAt: new Date(), // Capture submission time on the backend
+    const newExamAttempt = await UserServices.saveExamResult({
+      userId, category, section, set, score,
+      totalQuestions, correctAnswers, duration, answers
     });
 
-    console.log('Exam attempt saved successfully:', newExamAttempt._id);
-
-    // 2. Optional: Link the exam attempt to the User's history
-    // This assumes your User model has an 'examHistory' array field that stores ExamAttempt ObjectIds.
-    try {
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { $push: { examHistory: newExamAttempt._id } }, // Push the MongoDB ObjectId of the new attempt
-        { new: true, upsert: false } // 'upsert: true' is typically used if you want to create the user if not found. Here, we expect the user to exist.
-      );
-
-      if (!updatedUser) {
-        console.warn(`Warning: User with ID ${userId} not found when trying to link exam attempt ${newExamAttempt._id}.`);
-        // You might decide this is an error and return a 404/500 if linking is mandatory.
-      } else {
-        console.log(`Exam attempt ${newExamAttempt._id} successfully linked to user ${userId}.`);
-      }
-    } catch (userUpdateError) {
-      console.warn(`Warning: Could not link exam attempt ${newExamAttempt._id} to user ${userId} history:`, userUpdateError.message);
-      // This is a warning, as the ExamAttempt document itself was successfully created.
-      // You might choose to make this an error depending on your application's requirements.
-    }
-
-    // Respond with success
     res.status(201).json({
       message: 'Exam results submitted successfully!',
       examResult: {
-        examId: newExamAttempt.examAttemptId, // Return the client-provided `examAttemptId`
+        mongoId: newExamAttempt._id,
         score: newExamAttempt.score,
         totalQuestions: newExamAttempt.totalQuestions,
         correctAnswers: newExamAttempt.correctAnswers,
         duration: newExamAttempt.duration,
-        mongoId: newExamAttempt._id // Also return the MongoDB ObjectId for future reference if needed
       }
     });
 
   } catch (error) {
     console.error('Error in submitExamResults controller:', error);
-
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({ message: 'Data validation failed during exam submission.', errors: messages });
-    }
-    if (error.code === 11000) { // MongoDB duplicate key error
-      return res.status(409).json({ message: 'Duplicate exam ID detected. This exam might have already been submitted.' });
-    }
-    if (error.name === 'CastError') { // Mongoose casting error
-      return res.status(400).json({ message: `Invalid data format for field '${error.path}'. Please check input types.`, error: error.message });
-    }
-    // Catch-all for any other unexpected errors
-    res.status(500).json({ message: 'Internal Server Error during exam submission.', error: error.message });
+    res.status(500).json({ message: 'Internal server error during exam submission.', error: error.message });
   }
 };
 
@@ -210,46 +153,12 @@ exports.deleteUser = async (req, res) => {
 
 // --- Controller for fetching exam review details ---
 exports.getExamReviewDetails = async (req, res) => {
-  const { userId, examAttemptId } = req.params;
   try {
-    // Find the specific exam attempt using both userId and the client-provided examAttemptId
-    const examEntry = await ExamAttempt.findOne({ userId: userId, examAttemptId: examAttemptId });
-
-    if (!examEntry) {
-      return res.status(404).json({ message: 'Exam attempt not found for review.' });
-    }
-
-    // Populate reviewData by fetching details for each question in the attempt's answers
-    const reviewData = await Promise.all(examEntry.answers.map(async (ans) => {
-      const questionDetails = await Question.findById(ans.questionId);
-      if (!questionDetails) {
-        // Log a warning if a question is not found (e.g., deleted from DB)
-        console.warn(`Question with ID ${ans.questionId} not found for review in exam attempt ${examAttemptId}.`);
-        // Return a placeholder for the missing question
-        return {
-          questionId: ans.questionId,
-          userSelectedOption: ans.selectedOption,
-          isCorrect: ans.isCorrect,
-          questionText: 'Question not found (may have been deleted)',
-          options: [],
-          correctAnswer: 'N/A'
-        };
-      }
-      return {
-        _id: questionDetails._id,
-        questionText: questionDetails.questionText,
-        questionImage: questionDetails.questionImage,
-        questionAudio: questionDetails.questionAudio,
-        options: questionDetails.options, // Full options array from Question model
-        correctAnswer: questionDetails.correctAnswer, // Correct answer from Question model
-        userSelectedOption: ans.selectedOption, // User's selected option for this attempt
-        isCorrect: ans.isCorrect // Whether user's answer was correct for this attempt
-      };
-    }));
-
-    res.status(200).json({ examEntry, reviewData });
+    const { userId, examAttemptId } = req.params;
+    const reviewData = await UserServices.getExamReviewDetails(userId, examAttemptId);
+    res.status(200).json(reviewData);
   } catch (error) {
-    console.error('Error in getExamReviewDetails controller:', error);
-    res.status(500).json({ message: 'Failed to fetch exam review details', error: error.message || 'Internal Server Error' });
+    console.error("Error in getExamReviewDetails controller:", error);
+    res.status(500).json({ message: error.message });
   }
 };

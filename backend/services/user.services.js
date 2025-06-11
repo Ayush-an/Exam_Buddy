@@ -1,10 +1,13 @@
 const UserModel = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const mongoose = require('mongoose'); // Import mongoose to get the Question model
-// Hardcoded JWT secret and expiry (change these as needed)
+const mongoose = require('mongoose');
 const JWT_SECRET = "yourSuperSecretKey123!";  // <-- Replace with your own secret
 const JWT_EXPIRE = "1h"; // e.g. "1h", "2d", "30m"
+const ExamAttempt = require('../models/ExamAttempt');
+const User = require('../models/user.model'); // adjust if needed
+const { v4: uuidv4 } = require('uuid');
+
 class UserServices {
  // Login: validate mobile + password, return user + token
  static async loginWithMobile(mobile, password) {
@@ -180,33 +183,19 @@ if (!updated) throw new Error("User not found");
  }
  }
 // New method: Get exam review details
- static async getExamReviewDetails(userId, examAttemptId) {
- try {
- const user = await UserModel.findById(userId);
- if (!user) throw new Error('User not found');
- // Find the specific exam entry by examId within the user's history
- const examEntry = user.examHistory.find(entry => String(entry.examId) === String(examAttemptId));
- if (!examEntry) throw new Error('Exam attempt not found in history');
-// Extract questionIds from the answers array in the exam entry
- const questionIds = examEntry.answers.map(answer => answer.questionId);
 
- // Get the Question model dynamically to fetch full question details
- const QuestionModel = mongoose.model('Question');
- const questions = await QuestionModel.find({ _id: { $in: questionIds } });
- // Combine original questions with user's answers for review
- const reviewData = questions.map(q => {
- const userAnswerEntry = examEntry.answers.find(ans => String(ans.questionId) === String(q._id));
- return {
- ...q.toObject(), // Convert Mongoose document to plain object
-userSelectedOption: userAnswerEntry?.selectedOption || null,
- isUserCorrect: userAnswerEntry?.isCorrect || false
- };
- });
- return { examEntry, reviewData }; // Return both summary and detailed review
- } catch (error) {
- throw new Error(`Failed to get exam review details: ${error.message}`);
- }
- }
+static async getExamReviewDetails(userId, attemptId) {
+  const examAttempt = await ExamAttempt.findOne({
+    _id: new mongoose.Types.ObjectId(attemptId),  // ✅ Convert to ObjectId
+    userId: new mongoose.Types.ObjectId(userId)   // ✅ Also convert userId
+  }).populate('answers.questionId');
+
+  if (!examAttempt) {
+    throw new Error("Failed to get exam review details: Exam attempt not found in database");
+  }
+
+  return examAttempt;
+}
  static async setResetToken(email, token, expiration) {
  return await UserModel.findOneAndUpdate(
  { email },
@@ -231,7 +220,45 @@ static async resetPassword(token, newPassword) {
 static generateAccessToken(tokenData) {
 return jwt.sign(tokenData, JWT_SECRET, { expiresIn: JWT_EXPIRE });
  }
+static async saveExamResult({
+  userId,
+  category,
+  section,
+  set,
+  score,
+  totalQuestions,
+  correctAnswers,
+  duration,
+  answers,
+}) {
+  try {
+    const newExamAttempt = await ExamAttempt.create({
+  examAttemptId: uuidv4(),  // ✅ this line is MANDATORY
+  userId,
+  category,
+  section,
+  set,
+  score,
+  totalQuestions,
+  correctAnswers,
+  duration,
+  answers,
+  submittedAt: new Date(),
+});
 
+    await User.findByIdAndUpdate(
+      userId,
+      { $push: { examHistory: newExamAttempt._id } },
+      { new: true, upsert: false }
+    );
+
+    return newExamAttempt;
+  } catch (error) {
+    console.error("Error saving exam attempt:", error);
+    throw new Error("Failed to save exam result: " + error.message);
+  }
 }
+}
+
 
 module.exports = UserServices;

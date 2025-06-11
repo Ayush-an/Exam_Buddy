@@ -1,5 +1,8 @@
 const questionServices = require('../services/question.services');
 const { Question } = require('../models/question.model');
+const mongoose = require('mongoose'); // For ObjectId validation if needed in controller directly
+const crypto = require("crypto"); // Assuming this is used elsewhere, though not in this specific file's snippets.
+
 // ======================= Question Paper Management ==========================
 /**
  * Get all question paper categories and their sections and sets.
@@ -9,9 +12,11 @@ async function getAllQuestionPapers(req, res) {
     const questionPapers = await questionServices.getAllQuestionPapers();
     res.status(200).json(questionPapers);
   } catch (error) {
+    console.error('Error in getAllQuestionPapers controller:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
+
 /**
  * Get question paper by category.
  */
@@ -22,9 +27,11 @@ async function getQuestionPapersByCategory(req, res) {
     if (!paper) return res.status(404).json({ message: `Category '${category}' not found.` });
     res.status(200).json(paper);
   } catch (error) {
+    console.error('Error in getQuestionPapersByCategory controller:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
+
 /**
  * Get section details for a category.
  */
@@ -37,23 +44,11 @@ async function getSectionDetails(req, res) {
     }
     res.status(200).json(section);
   } catch (error) {
+    console.error('Error in getSectionDetails controller:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
 
-async function getQuestionsBySet(req, res) {
-  const { category, section, set } = req.params;
-  try {
-    const questions = await questionServices.getQuestionsBySet(category, section, set);
-    if (!questions || questions.length === 0) {
-      return res.status(404).json({ message: `No questions found for set "${set}" in section "${section}" of category "${category}".` });
-    }
-    res.status(200).json(questions);
-  } catch (error) {
-    console.error('Error in getQuestionsBySet controller:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message || 'Unknown error' });
-  }
-}
 /**
  * Create or update a question paper.
  */
@@ -66,18 +61,18 @@ async function createOrUpdateQuestionPaper(req, res) {
     const paper = await questionServices.createOrUpdateQuestionPaper(category, sections);
     res.status(201).json(paper);
   } catch (error) {
+    console.error('Error in createOrUpdateQuestionPaper controller:', error);
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: 'Validation failed', errors: error.errors });
     }
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
+
 // ========================== Question Management =============================
 /**
  * Create a new question.
  */
-// In question.controller.js, inside the createQuestion function:
-
 async function createQuestion(req, res) {
   try {
     // Log req.body and req.files to inspect the incoming data structure after Multer
@@ -106,9 +101,6 @@ async function createQuestion(req, res) {
     questionData.questionAudio = qAudioFile ? qAudioFile.path : null;
 
     // --- IMPORTANT: Reconstruct the 'options' array from req.body (or use it directly if Multer reconstructed it) ---
-    // If Multer is correctly reassembling `options` into an array on `req.body`,
-    // `req.body.options` will directly be an array of objects.
-    // If it's flattened, we'll manually reconstruct.
     let parsedOptions = [];
     if (Array.isArray(req.body.options)) {
         // Multer correctly reconstructed the array directly
@@ -188,8 +180,7 @@ async function createQuestion(req, res) {
     }
 
     // If validation passes, create and save the question
-    const question = new Question(questionData);
-    const savedQuestion = await question.save();
+    const savedQuestion = await questionServices.createQuestion(questionData);
     console.log("--- Question created successfully ---");
     res.status(201).json(savedQuestion);
 
@@ -211,6 +202,24 @@ async function createQuestion(req, res) {
     console.log("--- createQuestion Controller END ---");
   }
 }
+
+/**
+ * Get all questions for a specific category, section, and set.
+ */
+async function getQuestionsBySet(req, res) {
+  const { category, section, set } = req.params;
+  try {
+    const questions = await questionServices.getQuestionsBySet(category, section, set);
+    if (!questions || questions.length === 0) {
+      return res.status(404).json({ message: `No questions found for set "${set}" in section "${section}" of category "${category}".` });
+    }
+    res.status(200).json(questions);
+  } catch (error) {
+    console.error('Error in getQuestionsBySet controller:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message || 'Unknown error' });
+  }
+}
+
 /**
  * Get all questions.
  */
@@ -219,9 +228,11 @@ async function getAllQuestions(req, res) {
     const questions = await questionServices.getAllQuestions();
     res.status(200).json(questions);
   } catch (error) {
+    console.error('Error in getAllQuestions controller:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
+
 /**
  * Get question by ID.
  */
@@ -234,9 +245,11 @@ async function getQuestionById(req, res) {
     }
     res.status(200).json(question);
   } catch (error) {
+    console.error('Error in getQuestionById controller:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
+
 /**
  * Delete question by ID.
  */
@@ -249,9 +262,11 @@ async function deleteQuestionById(req, res) {
     }
     res.status(200).json({ message: `Question with id ${id} deleted.` });
   } catch (error) {
+    console.error('Error in deleteQuestionById controller:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
+
 // ======================= Set Management ==========================
 /**
  * Get all sets of a section.
@@ -263,18 +278,19 @@ async function getSets(req, res) {
     const sets = await questionServices.getSets(category, sectionName);
     res.status(200).json(sets);
   } catch (error) {
+    console.error('Error in getSets controller:', error);
     res.status(500).json({ message: error.message });
   }
 }
+
 /**
  * Add a new set to a section.
- * Expects { name, timeLimitMinutes (optional) }
+ * Expects { name, timeLimitMinutes (optional) } in req.body
  */
 async function addSet(req, res) {
   const { category, sectionName } = req.params;
-  // Corrected: Extract 'name' directly from req.body
   const newSet = {
-    name: req.body.name, // Changed from req.body.setName to req.body.name
+    name: req.body.name,
     timeLimitMinutes: req.body.timeLimit ? parseInt(req.body.timeLimit, 10) : undefined,
   };
   try {
@@ -282,16 +298,18 @@ async function addSet(req, res) {
     if (!newSet.name || typeof newSet.name !== 'string' || newSet.name.trim() === '') {
         return res.status(400).json({ message: 'Set name is required and cannot be empty.' });
     }
+    // The service layer already throws specific errors like "Set already exists" or "Category not found",
+    // which your controller correctly catches and sends.
     const sets = await questionServices.addSet(category, sectionName, newSet);
     res.status(201).json({ message: 'Set added successfully', sets });
   } catch (error) {
-    // The service layer already throws specific errors like "Set already exists" or "Category not found",
-    // which your controller correctly catches and sends.
+    console.error('Error in addSet controller:', error);
     res.status(400).json({ message: error.message });
   }
 }
+
 /**
- * Update set name or time limit.
+ * Update set name and/or time limit.
  */
 async function updateSet(req, res) {
   const { category, sectionName, oldSetName } = req.params;
@@ -301,9 +319,11 @@ async function updateSet(req, res) {
     const updatedSets = await questionServices.updateSet(category, sectionName, oldSetName, newSetData);
     res.status(200).json({ message: 'Set updated successfully', sets: updatedSets });
   } catch (error) {
+    console.error('Error in updateSet controller:', error);
     res.status(400).json({ message: error.message });
   }
 }
+
 /**
  * Update only the time limit of a set.
  */
@@ -314,9 +334,11 @@ async function updateSetTimeLimit(req, res) {
     const updated = await questionServices.updateSetTimeLimit(category, sectionName, setName, timeLimitMinutes);
     res.status(200).json({ message: 'Time limit updated', set: updated });
   } catch (error) {
+    console.error('Error in updateSetTimeLimit controller:', error);
     res.status(400).json({ message: error.message });
   }
 }
+
 /**
  * Delete time limit from a set.
  */
@@ -326,9 +348,11 @@ async function deleteSetTimeLimit(req, res) {
     const updated = await questionServices.deleteSetTimeLimit(category, sectionName, setName);
     res.status(200).json({ message: 'Time limit removed', set: updated });
   } catch (error) {
+    console.error('Error in deleteSetTimeLimit controller:', error);
     res.status(400).json({ message: error.message });
   }
 }
+
 /**
  * Delete a set from a section.
  */
@@ -338,18 +362,28 @@ async function deleteSet(req, res) {
     const updatedSets = await questionServices.deleteSet(category, sectionName, setName);
     res.status(200).json({ message: 'Set deleted successfully', sets: updatedSets });
   } catch (error) {
+    console.error('Error in deleteSet controller:', error);
     res.status(400).json({ message: error.message });
   }
 }
+
 // ======================= Additional Fetch Utilities ==========================
+/**
+ * Fetch all categories, sections, and sets (structured data for exam papers).
+ */
 async function fetchAllCategories(req, res) {
   try {
     const data = await questionServices.getAllCategoriesSectionsSets();
     res.status(200).json(data);
   } catch (err) {
+    console.error('Error in fetchAllCategories controller:', err);
     res.status(500).json({ error: 'Failed to fetch categories' });
   }
 }
+
+/**
+ * Fetch sections for a specific category.
+ */
 async function fetchSectionsByCategory(req, res) {
   const { category } = req.params;
   try {
@@ -357,9 +391,14 @@ async function fetchSectionsByCategory(req, res) {
     if (!sections) return res.status(404).json({ error: 'Category not found' });
     res.status(200).json(sections);
   } catch (err) {
+    console.error('Error in fetchSectionsByCategory controller:', err);
     res.status(500).json({ error: 'Failed to fetch sections' });
   }
 }
+
+/**
+ * Fetch sets for a specific category and section.
+ */
 async function fetchSetsByCategorySection(req, res) {
   const { category, section } = req.params;
   try {
@@ -367,37 +406,27 @@ async function fetchSetsByCategorySection(req, res) {
     if (!sets) return res.status(404).json({ error: 'Section or category not found' });
     res.status(200).json(sets);
   } catch (err) {
+    console.error('Error in fetchSetsByCategorySection controller:', err);
     res.status(500).json({ error: 'Failed to fetch sets' });
   }
 }
-const express = require('express');
-const app = express();
-app.get('/api/questions', async (req, res) => {
-  const { category, section, set } = req.query;
-  try {
-    const questions = await fetchQuestionsByCategorySectionSet(category, section, set);
-    res.json(questions);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
 
+// --- Module Exports ---
 module.exports = {
-  createQuestion: require('./question.controller').createQuestion, // Ensure `createQuestion` is correctly exported
-  // Question Paper
+  // Question Paper Controllers
   getAllQuestionPapers,
   getQuestionPapersByCategory,
   getSectionDetails,
   createOrUpdateQuestionPaper,
 
-  // Questions
+  // Question Controllers
   createQuestion,
   getAllQuestions,
   getQuestionById,
   deleteQuestionById,
-  getQuestionsBySet,
+  getQuestionsBySet, // Exporting the function to fetch questions by set
 
-  // Sets
+  // Set Controllers
   getSets,
   addSet,
   updateSet,
@@ -405,7 +434,7 @@ module.exports = {
   deleteSetTimeLimit,
   deleteSet,
 
-  // Additional fetchers
+  // Additional Fetcher Controllers
   fetchAllCategories,
   fetchSectionsByCategory,
   fetchSetsByCategorySection,
