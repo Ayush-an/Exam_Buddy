@@ -12,10 +12,19 @@ class UserServices {
  // Login: validate mobile + password, return user + token
  static async loginWithMobile(mobile, password) {
  try {
- const user = await UserModel.findOne({ mobile });
- if (!user) throw new Error("Invalid mobile number or password");
- const isMatch = await bcrypt.compare(password, user.password);
- if (!isMatch) throw new Error("Invalid mobile number or password");
+ const user = await UserModel.findOne({ mobile: String(mobile) });
+console.log("Login attempt for mobile:", mobile);
+console.log("User found:", user);
+console.log("Entered password (trimmed):", password.trim());
+console.log("Stored hash:", user.password);
+if (user) {
+  console.log("Entered password:", password);
+  console.log("Stored hash:", user.password);
+ const isMatch = await bcrypt.compare(password.trim(), user.password);
+
+  console.log("Password match result:", isMatch);
+  if (!isMatch) throw new Error("Invalid mobile number or password");
+}
  // Create JWT payload and token
  const payload = { userId: user._id, mobile: user.mobile };
  const token = this.generateAccessToken(payload);
@@ -30,51 +39,58 @@ class UserServices {
  }
  }
  // Register user: hash password explicitly before saving
- static async registerUser({
- firstName,
- lastName,
- mobile,
- parentMobile,
- whatsapp,
- email,
- dob,
- password,
- packagePurchased = "Free",
- planSubscription = null,
- profileImage = "",
- }) {
- try {
- const existingUser = await UserModel.findOne({ email });
- if (existingUser) {
- throw new Error("User with this email already exists");
- }
- const salt = await bcrypt.genSalt(10);
- const hashedPassword = await bcrypt.hash(password, salt);
- const newUser = new UserModel({
- firstName,
-lastName,
- mobile,
- parentMobile,
- whatsapp,
- email,
- dob,
- password: hashedPassword,
- packagePurchased,
- planSubscription,
- profileImage,
- score: 0,
- papersAttempted: 0,
- examHistory: [],
- isActive: true,
-});
-const savedUser = await newUser.save();
- const userObj = savedUser.toObject();
- delete userObj.password;
- return userObj;
- } catch (err) {
- throw err;
- }
- }
+static async registerUser(userData) {
+  try {
+    let {
+      firstName,
+      lastName,
+      mobile,
+      parentMobile,
+      whatsapp,
+      email,
+      dob,
+      password,
+      packagePurchased = "Free",
+      planSubscription = null,
+      profileImage = "",
+    } = userData;
+
+    password = password?.trim(); // ✅ Safe trimming
+
+    console.log("Registering user with password:", password);
+
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      throw new Error("User with this email already exists");
+    }
+    const newUser = new UserModel({
+      firstName,
+      lastName,
+      mobile,
+      parentMobile,
+      whatsapp,
+      email,
+      dob,
+      password: password.trim(),
+      packagePurchased,
+      planSubscription,
+      profileImage,
+      score: 0,
+      papersAttempted: 0,
+      examHistory: [],
+      isActive: true,
+    });
+
+    const savedUser = await newUser.save();
+    const userObj = savedUser.toObject();
+    delete userObj.password;
+
+    return userObj;
+  } catch (err) {
+    throw err;
+  }
+}
+
  // Update user, hash password if provided
  static async updateUser(userId, updateData) {
  try {
