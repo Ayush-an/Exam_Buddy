@@ -1,35 +1,38 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// IMPORTANT: These paths assume App.js is in 'src/' and ALL page components
-// (SignIn.jsx, SignUp.jsx, UserSignIn.jsx, etc.) are directly inside 'src/pages/'.
-import SignIn from './pages/SignIn.jsx'; // Admin SignIn
-import SignUp from './pages/SignUp.jsx'; // Admin SignUp
-import UserSignIn from './pages/UserSignIn.jsx'; // User SignIn
-import UserSignUp from './pages/UserSignUp.jsx'; // User SignUp
+
+// Page Imports
+import SignIn from './pages/SignIn.jsx';
+import SignUp from './pages/SignUp.jsx';
+import UserSignIn from './pages/UserSignIn.jsx';
+import UserSignUp from './pages/UserSignUp.jsx';
 import Question from './pages/Question.jsx';
 import PaperSetPage from './pages/PaperSetPage.jsx';
-import AnswerPage from './pages/AnswerPage.jsx'; // Exam page for users
+import AnswerPage from './pages/AnswerPage.jsx';
+import ViewAnswer from './pages/ViewAnswer.jsx'; // Corrected import path casing
 
 function App() {
   return (
-    // The entire application is wrapped in <Router> to provide routing context
     <Router>
       <Routes>
-        {/* Default route for the application, typically a login or homepage */}
-        <Route path="/" element={<UserSignIn />} /> 
+        {/* Default route */}
+        <Route path="/" element={<UserSignIn />} />
 
-        {/* Admin related routes */}
+        {/* Admin routes */}
         <Route path="/admin-signin" element={<SignIn />} />
         <Route path="/admin-signup" element={<SignUp />} />
         <Route path="/question" element={<Question />} />
         <Route path="/paper-set" element={<PaperSetPage />} />
 
-        {/* User related routes */}
+        {/* User routes */}
         <Route path="/user-signin" element={<UserSignIn />} />
         <Route path="/user-signup" element={<UserSignUp />} />
-        <Route path="/exam" element={<AnswerPage />} /> {/* User's exam page */}
- <Route path="/review/:userId/:attemptId" element={<AnswerPage />} />
-        {/* Add any other general routes here */}
+        <Route path="/exam" element={<AnswerPage />} />
+        
+        {/* The correct route for viewing a completed exam attempt */}
+        <Route path="/view-answer/:userId/:attemptId" element={<ViewAnswer />} />
+
+        
       </Routes>
     </Router>
   );

@@ -75,7 +75,7 @@ export default function UserSignUp() {
               value={form.firstName}
               onChange={handleChange}
               className="w-full p-3 transition duration-150 ease-in-out border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="John"
+              placeholder="Name"
               required
             />
           </div>
@@ -88,7 +88,7 @@ export default function UserSignUp() {
               value={form.lastName}
               onChange={handleChange}
               className="w-full p-3 transition duration-150 ease-in-out border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Doe"
+              placeholder="Last Name"
               required
             />
           </div>
@@ -117,7 +117,7 @@ export default function UserSignUp() {
             value={form.email}
             onChange={handleChange}
             className="w-full p-3 transition duration-150 ease-in-out border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            placeholder="john.doe@example.com"
+            placeholder="ABC@example.com"
             required
           />
         </div>
