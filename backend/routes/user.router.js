@@ -17,8 +17,8 @@ router.put("/update/:id", UserController.updateProfile);
 router.delete("/delete/:id", UserController.deleteUser);
 
 // --- New routes for Exam History ---
-router.post('/exam-history', UserController.submitExamResults);
+//router.post('/exam-history', UserController.submitExamResults);
 // Route to get review details: includes userId for security/scoping
-router.get('/exam-history/:userId/:examAttemptId', UserController.getExamReviewDetails);
+//router.get('/exam-history/:userId/:examAttemptId', UserController.getExamReviewDetails);
 
 module.exports = router;

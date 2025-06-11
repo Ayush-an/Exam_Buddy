@@ -40,7 +40,7 @@ router.get('/questions/:id', questionController.getQuestionById);
 router.delete('/questions/:id', questionController.deleteQuestionById);
 
 // NEW ROUTE TO FETCH QUESTIONS BY CATEGORY, SECTION, AND SET
-router.get('/questions/:category/:section/:set', questionController.getQuestionsBySet); // <--- ADD THIS LINE
+router.get('/questions/:category/:section/:set', questionController.getQuestionsBySet); // <--- This line is correctly added!
 
 // Set Routes
 router.get('/question-papers/:category/sections/:sectionName/sets', questionController.getSets);
