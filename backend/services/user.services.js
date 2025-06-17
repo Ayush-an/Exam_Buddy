@@ -202,9 +202,11 @@ if (!updated) throw new Error("User not found");
 
 static async getExamReviewDetails(userId, attemptId) {
   const examAttempt = await ExamAttempt.findOne({
-    _id: new mongoose.Types.ObjectId(attemptId),  // ✅ Convert to ObjectId
-    userId: new mongoose.Types.ObjectId(userId)   // ✅ Also convert userId
+    _id: new mongoose.Types.ObjectId(attemptId) ,  // ✅ Convert to ObjectId
+    userId: new mongoose.Types.ObjectId(userId) 
+      // ✅ Also convert userId
   }).populate('answers.questionId');
+  
 
   if (!examAttempt) {
     throw new Error("Failed to get exam review details: Exam attempt not found in database");

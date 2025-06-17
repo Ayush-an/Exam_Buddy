@@ -161,6 +161,7 @@ exports.submitExamResults = async (req, res) => {
 exports.getExamReviewDetails = async (req, res) => {
   try {
     const { userId, examAttemptId } = req.params;
+    
     const reviewData = await UserServices.getExamReviewDetails(userId, examAttemptId);
     res.status(200).json(reviewData);
   } catch (error) {
