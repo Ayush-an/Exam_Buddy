@@ -8,14 +8,17 @@ const multer = require('multer');
 // Configure Multer storage (keep this as is)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Ensure this directory exists!
+    // Ensure this directory exists! It's relative to the project root where the server is started.
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
-const upload = multer({ storage: storage }).any(); // Multer setup for all files
+// Multer setup for handling various file uploads
+// '.any()' handles all files, including single question images/audio and the excel file.
+const upload = multer({ storage: storage }).any();
 
 // --- Existing routes ---
 
@@ -40,7 +43,12 @@ router.get('/questions/:id', questionController.getQuestionById);
 router.delete('/questions/:id', questionController.deleteQuestionById);
 
 // NEW ROUTE TO FETCH QUESTIONS BY CATEGORY, SECTION, AND SET
-router.get('/questions/:category/:section/:set', questionController.getQuestionsBySet); // <--- This line is correctly added!
+router.get('/questions/:category/:section/:set', questionController.getQuestionsBySet);
+
+// NEW ROUTE FOR BULK EXCEL UPLOAD
+// This route will handle the Excel file upload. The 'upload' middleware will process the file.
+// The actual parsing and saving logic will be in the 'bulkUploadQuestions' controller function.
+router.post('/questions/bulk-upload', upload, questionController.bulkUploadQuestions); // Added this new route
 
 // Set Routes
 router.get('/question-papers/:category/sections/:sectionName/sets', questionController.getSets);
