@@ -1,3 +1,5 @@
+// D:\Exam-portel\backend\services\question.services.js
+
 const { Question, QuestionPaper } = require('../models/question.model');
 const mongoose = require('mongoose');
 
@@ -135,7 +137,7 @@ async function validateSectionAndSet(category, sectionName, setName) {
   }
 }
 
-// --- Question Paper Services ---
+// ======================= Question Paper Management Services ==========================
 
 /**
  * Fetches all question papers.
@@ -203,7 +205,7 @@ async function createOrUpdateQuestionPaper(category, sections) {
   }
 }
 
-// --- Set Services ---
+// ======================= Set Management Services ==========================
 
 /**
  * Get all sets for a given category and section, including their time limits.
@@ -403,6 +405,41 @@ async function deleteSet(category, sectionName, setName) {
   }
 }
 
+// ======================= Additional Fetch Utilities Services ==========================
+// Fetch all categories, sections, and sets (structured data for exam papers)
+async function getAllCategoriesSectionsSets() {
+  // This service function would likely need to retrieve specific fields
+  // or aggregate data from QuestionPaper model if you want a concise structure
+  return QuestionPaper.find({}, 'category sections.name sections.sets.name sections.sets.timeLimitMinutes');
+}
+
+// Fetch sections for a specific category
+async function getSectionsByCategory(category) {
+  const questionPaper = await QuestionPaper.findOne({ category });
+  return questionPaper ? questionPaper.sections.map(s => s.name) : null;
+}
+// Fetch sets for a specific category and section
+async function getSetsByCategoryAndSection(category, sectionName) {
+  const questionPaper = await QuestionPaper.findOne({ category });
+  if (!questionPaper) return null;
+  const section = questionPaper.sections.find(s => s.name === sectionName);
+  return section ? section.sets : null;
+}
+/**
+ * Service function to bulk insert questions into the database.
+ * @param {Array} questions - An array of question objects parsed from the Excel file.
+ * @returns {Promise<Array>} - The array of inserted question documents.
+ */
+async function bulkUploadQuestions(questions) {
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("No questions provided for bulk upload.");
+  }
+  // Use insertMany for efficient bulk insertion
+  const insertedQuestions = await Question.insertMany(questions);
+  return insertedQuestions;
+}
+
+
 // --- Module Exports ---
 module.exports = {
   // Question Paper services
@@ -424,5 +461,11 @@ module.exports = {
   getAllQuestions,
   getQuestionById,
   deleteQuestionById,
-  getQuestionsBySet
+  getQuestionsBySet,
+  bulkUploadQuestions, // This line was corrected to remove the comma before it
+
+  // Additional Fetcher Services
+  getAllCategoriesSectionsSets,
+  getSectionsByCategory,
+  getSetsByCategoryAndSection
 };

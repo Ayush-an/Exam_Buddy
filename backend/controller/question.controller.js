@@ -1,7 +1,12 @@
+// D:\Exam-portel\backend\controller\question.controller.js
+
 const questionServices = require('../services/question.services');
-const { Question } = require('../models/question.model');
+const { Question } = require('../models/question.model'); // Still needed for model definition if used directly for validation or structure reference
 const mongoose = require('mongoose'); // For ObjectId validation if needed in controller directly
 const crypto = require("crypto"); // Assuming this is used elsewhere, though not in this specific file's snippets.
+const xlsx = require('xlsx'); // For reading Excel files
+const path = require('path'); // For path manipulation
+const fs = require('fs'); // For file system operations, particularly for cleanup
 
 // ======================= Question Paper Management ==========================
 /**
@@ -411,6 +416,103 @@ async function fetchSetsByCategorySection(req, res) {
   }
 }
 
+/**
+ * Handles bulk upload of questions from an Excel file.
+ * Expects an Excel file with specific column headers for question data.
+ *
+ * This function is updated to use the camelCase keys that `xlsx.utils.sheet_to_json`
+ * typically produces from standard Excel column names (e.g., "Question Text" becomes "questionText").
+ */
+async function bulkUploadQuestions(req, res) {
+  let filePath; // Declare filePath here to be accessible in finally block
+  try {
+    const { category, section, set } = req.body; // Get category, section, set from form fields
+    const excelFile = req.files.find(file => file.fieldname === 'excelFile'); // Find the uploaded Excel file
+
+    if (!excelFile) {
+      return res.status(400).json({ message: 'No Excel file uploaded.' });
+    }
+    if (!category || !section || !set) {
+      return res.status(400).json({ message: 'Category, Section, and Set are required for bulk upload.' });
+    }
+
+    filePath = path.join(__dirname, '..', excelFile.path); // Adjust path as needed
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0]; // Assuming data is in the first sheet
+    const worksheet = workbook.Sheets[sheetName];
+    // Use header: 1 to get raw array of arrays, then manually map, or let sheet_to_json infer.
+    // Given the previous error log, sheet_to_json already converts to camelCase.
+    const jsonData = xlsx.utils.sheet_to_json(worksheet);
+
+    const questionsToSave = [];
+
+    for (const row of jsonData) {
+      // --- FIX: Use the actual camelCase keys observed in the error log ---
+      const questionText = row.questionText; // Directly use 'questionText'
+      const optionA = row.optionA;         // Directly use 'optionA'
+      const optionB = row.optionB;
+      const optionC = row.optionC;
+      const optionD = row.optionD;
+      const correctAnswer = row.correctAnswer?.toLowerCase(); // Directly use 'correctAnswer'
+
+      // Skip row if essential data is missing
+      if (!questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer) {
+        console.warn('Skipping row due to missing essential data (check Excel headers):', row);
+        continue; // Skip to the next row
+      }
+
+      // Default option type to 'text', can be extended for image/audio options from Excel
+      // Assuming 'Option A Type' etc. would also be camelCase if present in Excel
+      const options = [
+        { type: row.optionAType || 'text', content: optionA },
+        { type: row.optionBType || 'text', content: optionB },
+        { type: row.optionCType || 'text', content: optionC },
+        { type: row.optionDType || 'text', content: optionD },
+      ];
+
+      // If your Excel contains paths/URLs for images/audio, you'd assign them here.
+      // This assumes these are already accessible paths/URLs, not files to be uploaded with the excel.
+      const questionImage = row.questionImage || null;
+      const questionAudio = row.questionAudio || null;
+
+      questionsToSave.push({
+        category,
+        section,
+        set,
+        questionText,
+        questionImage,
+        questionAudio,
+        options,
+        correctAnswer,
+      });
+    }
+
+    if (questionsToSave.length === 0) {
+      return res.status(400).json({ message: 'No valid questions found in the Excel file to process. Please ensure column headers match expected format (e.g., questionText, optionA, correctAnswer).' });
+    }
+
+    // Call the service layer to save questions
+    const uploadedQuestions = await questionServices.bulkUploadQuestions(questionsToSave);
+
+    res.status(200).json({
+      message: `${uploadedQuestions.length} questions uploaded successfully from Excel!`,
+      uploadedCount: uploadedQuestions.length,
+    });
+
+  } catch (error) {
+    console.error('Error during bulk Excel upload:', error);
+    res.status(500).json({ message: 'Failed to upload questions from Excel.', error: error.message });
+  } finally {
+    // Optional: Delete the uploaded Excel file after processing to save disk space
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) console.error('Error deleting uploaded Excel file:', unlinkErr);
+      });
+    }
+  }
+}
+
+
 // --- Module Exports ---
 module.exports = {
   // Question Paper Controllers
@@ -424,7 +526,8 @@ module.exports = {
   getAllQuestions,
   getQuestionById,
   deleteQuestionById,
-  getQuestionsBySet, // Exporting the function to fetch questions by set
+  getQuestionsBySet,
+  bulkUploadQuestions, // <-- IMPORTANT: Add this to exports
 
   // Set Controllers
   getSets,
