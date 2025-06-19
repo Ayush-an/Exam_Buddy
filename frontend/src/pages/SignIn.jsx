@@ -36,7 +36,7 @@ export default function SignIn() {
   };
 
   const handleSignUpClick = () => {
-    navigate('/signup'); // Navigate to the /signup route
+    navigate('/admin-signup'); // Navigate to the /signup route
   };
 
   return (

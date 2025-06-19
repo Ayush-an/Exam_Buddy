@@ -24,7 +24,7 @@ const Question = () => {
   // State for loading status during Excel upload.
   const [isUploadingExcel, setIsUploadingExcel] = useState(false);
 
-  // Form state for creating a single question.
+  // Form state for creating a single question, now including 'marks'.
   const [form, setForm] = useState({
     category: '',
     section: '',
@@ -39,6 +39,7 @@ const Question = () => {
       { type: 'text', content: '' }
     ],
     correctAnswer: 'a',
+    marks: 1, // New field for marks, defaulting to 1
   });
 
   // Available categories for selection.
@@ -77,12 +78,13 @@ const Question = () => {
   useEffect(() => {
     if (form.category) {
       setSections(sectionMap[form.category] || []);
-      setForm(prev => ({ ...prev, section: '', set: '' })); // Reset section and set
+      // Reset relevant fields when category changes
+      setForm(prev => ({ ...prev, section: '', set: '', questionText: '', questionImage: null, questionAudio: null, options: [{ type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }], correctAnswer: 'a', marks: 1 }));
       setSets([]); // Clear sets
     } else {
       setSections([]);
       setSets([]);
-      setForm(prev => ({ ...prev, section: '', set: '' }));
+      setForm(prev => ({ ...prev, section: '', set: '', questionText: '', questionImage: null, questionAudio: null, options: [{ type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }], correctAnswer: 'a', marks: 1 }));
     }
     setCreateNewSet(false); // Hide new set creation form
     setNewSetName(''); // Clear new set name
@@ -96,7 +98,7 @@ const Question = () => {
       fetchSets(form.category, form.section);
     } else {
       setSets([]);
-      setForm(prev => ({ ...prev, set: '' }));
+      setForm(prev => ({ ...prev, set: '', questionText: '', questionImage: null, questionAudio: null, options: [{ type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }], correctAnswer: 'a', marks: 1 }));
       setSetTimeLimit('');
     }
     setExcelFile(null); // Clear Excel file
@@ -191,6 +193,7 @@ const Question = () => {
         { type: 'text', content: '' }
       ],
       correctAnswer: 'a',
+      marks: 1, // Reset marks
     }));
     setCreateNewSet(false);
     setNewSetName('');
@@ -218,6 +221,7 @@ const Question = () => {
         { type: 'text', content: '' }
       ],
       correctAnswer: 'a',
+      marks: 1, // Reset marks
     }));
     setCreateNewSet(false);
     setNewSetName('');
@@ -255,7 +259,7 @@ const Question = () => {
   };
 
   /**
-   * Handles general form input changes (question text, question image/audio, correct answer).
+   * Handles general form input changes (question text, question image/audio, correct answer, marks).
    * @param {Event} e The event object from the input change.
    */
   const handleChange = (e) => {
@@ -263,7 +267,8 @@ const Question = () => {
     if (files && files.length > 0) {
       setForm({ ...form, [name]: files[0] }); // For file inputs, store the File object
     } else {
-      setForm({ ...form, [name]: value }); // For text/select inputs, store the value
+      // For number inputs, convert value to a number
+      setForm({ ...form, [name]: name === 'marks' ? Number(value) : value });
     }
   };
 
@@ -273,8 +278,8 @@ const Question = () => {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.category || !form.section || !form.set || !form.questionText || form.options.some(opt => !opt.content) || !form.correctAnswer) {
-      return alert('Please fill in all required fields (Category, Section, Set, Question Text, Options, Correct Answer).');
+    if (!form.category || !form.section || !form.set || !form.questionText || form.options.some(opt => !opt.content) || !form.correctAnswer || form.marks === '' || form.marks === null || form.marks < 0) {
+      return alert('Please fill in all required fields (Category, Section, Set, Question Text, Options, Correct Answer, Marks), and ensure Marks is a non-negative number.');
     }
 
     const formData = new FormData();
@@ -285,6 +290,8 @@ const Question = () => {
     if (form.questionImage) formData.append('questionImage', form.questionImage);
     if (form.questionAudio) formData.append('questionAudio', form.questionAudio);
     formData.append('correctAnswer', form.correctAnswer);
+    formData.append('marks', form.marks); // Include marks in FormData
+
     form.options.forEach((opt, idx) => {
       const contentValue = opt.type === 'text' ? opt.content : (opt.content instanceof File ? opt.content : null);
       if (contentValue) {
@@ -315,6 +322,7 @@ const Question = () => {
           { type: 'text', content: '' }
         ],
         correctAnswer: 'a',
+        marks: 1, // Reset marks
       });
       setSections([]);
       setSets([]);
@@ -354,6 +362,7 @@ const Question = () => {
     excelFormData.append('category', form.category);
     excelFormData.append('section', form.section);
     excelFormData.append('set', form.set);
+    // No need to append marks here, as marks for bulk upload come from the Excel row itself.
 
     try {
       await axios.post('http://localhost:3000/api/questions/bulk-upload', excelFormData, {
@@ -513,7 +522,7 @@ const Question = () => {
             <h3 className="mb-4 text-xl font-bold text-purple-800">Bulk Upload Questions via Excel</h3>
             <p className="mb-4 text-sm text-purple-700">
               You can upload an Excel file (.xlsx or .xls) to add multiple questions at once to the selected Category, Section, and Set.
-              Please ensure your Excel file follows the specified format (e.g., columns for Question Text, Option A, Option B, etc., Correct Answer).
+              Please ensure your Excel file includes columns for: `questionText`, `optionA`, `optionB`, `optionC`, `optionD`, `correctAnswer`, and **`marks`**.
             </p>
             <div className="flex items-center space-x-4">
               <input
@@ -631,6 +640,22 @@ const Question = () => {
             ))}
           </select>
         </div>
+
+        {/* Marks Input Field */}
+        <div>
+          <label htmlFor="marks" className="block mb-2 text-base font-semibold text-gray-700">Marks</label>
+          <input
+            type="number"
+            id="marks"
+            name="marks"
+            value={form.marks}
+            onChange={handleChange}
+            min="0"
+            className="w-full p-3 transition duration-200 ease-in-out border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter marks for this question"
+          />
+        </div>
+
 
         {/* Associated Set Timer Information */}
         <div className="p-5 border border-blue-200 rounded-xl bg-blue-50">

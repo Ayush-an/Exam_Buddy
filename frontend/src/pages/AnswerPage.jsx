@@ -124,16 +124,24 @@ export default function AnswerPage() {
 
     let currentScore = 0;
     let currentCorrectAnswersCount = 0;
+    let totalMarksPossible = 0; // Initialize total possible marks
+
     const totalQuestions = questions.length;
+
+    // Calculate duration only if exam started
     const calculatedDuration = calculateTimeTaken();
 
     const answersForSubmission = questions.map(q => {
       const selected = userAnswers[q._id];
       const isCorrect = selected === q.correctAnswer;
+
+      // Add marks for correct answers
       if (isCorrect) {
-        currentScore += 1;
+        currentScore += q.marks; // Add question's marks to score
         currentCorrectAnswersCount += 1;
       }
+      totalMarksPossible += q.marks; // Add question's marks to total possible marks
+
       return { questionId: q._id, selectedOption: selected, isCorrect };
     });
 
@@ -144,8 +152,8 @@ export default function AnswerPage() {
       category: selectedExam.category,
       section: selectedExam.section,
       set: selectedExam.set,
-      examAttemptId: new Date().toISOString(), // This will be used by the backend to create a unique attempt
-      score: currentScore,
+      score: currentScore, // This is the calculated score based on marks
+      totalMarksPossible: totalMarksPossible, // Send total possible marks
       totalQuestions: totalQuestions,
       correctAnswers: currentCorrectAnswersCount,
       duration: calculatedDuration,
@@ -159,15 +167,15 @@ export default function AnswerPage() {
         }
       });
 
-      // IMPORTANT: The backend should return the unique ID of the saved attempt.
-      // We assume it's in `response.data.examResult.examId`.
+      // Update examResult state with data from backend response
       setExamResult({
         score: response.data.examResult.score,
+        totalMarksPossible: response.data.examResult.totalMarksPossible, // Get totalMarksPossible from response
         totalQuestions: response.data.examResult.totalQuestions,
         correctAnswersCount: response.data.examResult.correctAnswers,
         timeTaken: response.data.examResult.duration,
         timeUp,
-   examAttemptId: response.data.examResult.mongoId // <--- CHANGE THIS LINE
+        examAttemptId: response.data.examResult.mongoId
       });
 
       setCurrentPhase('examSubmitted');
@@ -178,11 +186,11 @@ export default function AnswerPage() {
       const errorMessage = err.response?.data?.message || err.message;
       setError(`Failed to submit exam: ${errorMessage}`);
       toast.error(`Failed to submit exam: ${errorMessage}`);
-      setCurrentPhase('examSubmitted');
+      setCurrentPhase('examSubmitted'); // Still move to submitted phase to show error
     } finally {
       setLoading(false);
     }
-  }, [user, selectedExam, questions, userAnswers, calculateTimeTaken]);
+  }, [user, selectedExam, questions, userAnswers, calculateTimeTaken]); // Added questions to dependencies
 
   // Timer lifecycle management
   useEffect(() => {
@@ -284,13 +292,13 @@ export default function AnswerPage() {
        <h2 className="mb-4 text-2xl font-bold text-center text-gray-800">Select Exam Paper</h2>
        {user && (
          <p className="text-sm text-center text-gray-600">
-           Welcome, <span className="font-semibold">{user.firstName}</span>! Status: <strong className={isUserPaid ? 'text-green-600' : 'text-red-600'}>
-             {isUserPaid ? 'Paid' : 'Free'}
-           </strong>
-           {isUserPaid && user.subscriptions?.length > 0 && ` (${user.subscriptions.find(sub => sub.status === 'active')?.planName || 'Active'})`}
-         </p>
-       )}
-       {error && <p className="text-center text-red-600">{error}</p>}
+            Welcome, <span className="font-semibold">{user.firstName}</span>! Status: <strong className={isUserPaid ? 'text-green-600' : 'text-red-600'}>
+              {isUserPaid ? 'Paid' : 'Free'}
+            </strong>
+            {isUserPaid && user.subscriptions?.length > 0 && ` (${user.subscriptions.find(sub => sub.status === 'active')?.planName || 'Active'})`}
+          </p>
+        )}
+        {error && <p className="text-center text-red-600">{error}</p>}
         <div>
           <label htmlFor="category" className="block mb-1 text-sm font-medium text-gray-700">Category</label>
           <select id="category" value={selectedExam.category} onChange={handleCategoryChange} className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" disabled={loading}>
@@ -311,18 +319,18 @@ export default function AnswerPage() {
           </div>
         )}
         {selectedExam.section && (
-           <div>
-            <label htmlFor="set" className="block mb-1 text-sm font-medium text-gray-700">Set</label>
-            <select id="set" value={selectedExam.set} onChange={handleSetChange} className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" disabled={!selectedExam.section}>
-                <option value="">-- Select --</option>
-                {(allExamData.find(c => c.category === selectedExam.category)?.sections.find(s => s.name === selectedExam.section)?.sets || []).map(s => <option key={s.name} value={s.name}>{s.name} ({s.timeLimitMinutes} min)</option>)}
-            </select>
-           </div>
+            <div>
+             <label htmlFor="set" className="block mb-1 text-sm font-medium text-gray-700">Set</label>
+             <select id="set" value={selectedExam.set} onChange={handleSetChange} className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" disabled={!selectedExam.section}>
+                 <option value="">-- Select --</option>
+                 {(allExamData.find(c => c.category === selectedExam.category)?.sections.find(s => s.name === selectedExam.section)?.sets || []).map(s => <option key={s.name} value={s.name}>{s.name} ({s.timeLimitMinutes} min)</option>)}
+             </select>
+            </div>
         )}
        <button onClick={startExam} className="w-full px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-700" disabled={loading || !selectedExam.set}>
-         {loading ? 'Loading...' : 'Start Exam'}
+          {loading ? 'Loading...' : 'Start Exam'}
        </button>
-     </div>
+      </div>
   );
 
   const renderExamInProgress = () => (
@@ -338,6 +346,7 @@ export default function AnswerPage() {
         {questions.map((question, qIndex) => (
           <div key={question._id} className="p-4 border border-gray-200 rounded-md bg-gray-50">
             <p className="mb-2 text-lg font-semibold">Q{qIndex + 1}: {question.questionText}</p>
+            {question.marks && <p className="text-sm text-gray-600">Marks: {question.marks}</p>} {/* Display Marks */}
             <MediaDisplay src={question.questionImage} type="image" alt="Question visual" className="h-auto max-w-full mb-2 rounded-md" />
             <MediaDisplay src={question.questionAudio} type="audio" className="w-full mb-2" />
             <div className="space-y-2">
@@ -363,24 +372,26 @@ export default function AnswerPage() {
     <div className="max-w-xl p-6 mx-auto space-y-4 text-center bg-white rounded-lg shadow-md">
       <h2 className="mb-4 text-2xl font-bold text-gray-800">Exam Completed!</h2>
       {error && <p className="mb-4 text-red-600">{error}</p>}
-     {examResult && (
-  <div className="space-y-2 text-gray-700">
-    <p className="text-lg">Your Score: <span className="font-bold text-blue-700">{examResult.score} / {examResult.totalQuestions}</span></p>
-    <p>Correct Answers: <span className="font-bold text-green-700">{examResult.correctAnswersCount}</span></p>
-    <p>Time Taken: <span className="font-bold">{formatTime(examResult.timeTaken)}</span></p>
-    {examResult.timeUp && <p className="font-semibold text-red-500">Time ran out!</p>}
+      {examResult && (
+        <div className="space-y-2 text-gray-700">
+          {/* Display score out of total possible marks */}
+          <p className="text-lg">Your Score: <span className="font-bold text-blue-700">{examResult.score} / {examResult.totalMarksPossible}</span></p>
+          <p>Correct Answers: <span className="font-bold text-green-700">{examResult.correctAnswersCount}</span></p>
+          <p>Total Questions: <span className="font-bold">{examResult.totalQuestions}</span></p>
+          <p>Time Taken: <span className="font-bold">{formatTime(examResult.timeTaken)}</span></p>
+          {examResult.timeUp && <p className="font-semibold text-red-500">Time ran out!</p>}
 
-    {examResult.examAttemptId ? (
-      <Link to={`/view-answer/${user?._id}/${examResult.examAttemptId}`}> {/* <-- Changed this line */}
-        <button className="w-full px-4 py-2 mt-4 font-medium text-white transition duration-150 ease-in-out bg-purple-600 rounded-md hover:bg-purple-700">
-          View Answers
-        </button>
-      </Link>
-    ) : (
-      <p className="text-sm text-red-500">Attempt ID missing, cannot view answers.</p>
-    )}
-  </div>
-)}
+          {examResult.examAttemptId ? (
+            <Link to={`/view-answer/${user?._id}/${examResult.examAttemptId}`}>
+              <button className="w-full px-4 py-2 mt-4 font-medium text-white transition duration-150 ease-in-out bg-purple-600 rounded-md hover:bg-purple-700">
+                View Answers
+              </button>
+            </Link>
+          ) : (
+            <p className="text-sm text-red-500">Attempt ID missing, cannot view answers.</p>
+          )}
+        </div>
+      )}
 
       <button onClick={resetExamFlow} className="w-full px-4 py-2 mt-2 font-medium text-gray-800 bg-gray-300 rounded-md hover:bg-gray-400">
         Start New Exam
@@ -392,12 +403,12 @@ export default function AnswerPage() {
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="flex items-center text-xl text-white">
-             <svg className="w-8 h-8 mr-3 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 mr-3 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-             </svg>
-             Loading...
-           </div>
+              </svg>
+              Loading...
+            </div>
         </div>
       )}
       <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />

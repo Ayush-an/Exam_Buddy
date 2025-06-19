@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 // Section schema with sets now containing time limits per set
 const sectionSchema = new mongoose.Schema({
   name: {
@@ -63,6 +64,7 @@ const sectionSchema = new mongoose.Schema({
     default: []
   }
 });
+
 // Question Paper schema
 const questionPaperSchema = new mongoose.Schema({
   category: {
@@ -74,6 +76,7 @@ const questionPaperSchema = new mongoose.Schema({
 }, {
   timestamps: true // Adds createdAt and updatedAt timestamps
 });
+
 // Question schema (individual question)
 const questionSchema = new mongoose.Schema({
   category: {
@@ -98,6 +101,7 @@ const questionSchema = new mongoose.Schema({
         // 'this' refers to the current question document being validated
         const { category, section } = this;
         // Find the corresponding QuestionPaper document for the given category
+        // Use mongoose.model('QuestionPaper') to avoid circular dependency if QuestionPaper is defined later
         const paper = await mongoose.model('QuestionPaper').findOne({ category });
         if (!paper) return false; // Category not found
 
@@ -111,9 +115,9 @@ const questionSchema = new mongoose.Schema({
       message: 'Invalid set for the given category and section.'
     }
   },
-  questionText: String,
-  questionImage: String, // Path to an image file
-  questionAudio: String, // Path to an audio file
+  questionText: { type: String, required: true }, // Added required: true as question text is essential
+  questionImage: String, // Path to an image file (optional)
+  questionAudio: String, // Path to an audio file (optional)
   options: [ // Array of possible answers
     {
       type: { // Type of the option content (e.g., 'text', 'image', 'audio')
@@ -129,29 +133,42 @@ const questionSchema = new mongoose.Schema({
   ],
   correctAnswer: { // Letter of the correct option (e.g., 'a', 'b', 'c', 'd')
     type: String,
-    enum: ['a', 'b', 'c', 'd'],
+    enum: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'], // Extended enum for more options if needed
     required: true
+  },
+  marks: { // NEW FIELD ADDED
+    type: Number,
+    required: true,
+    min: 0,
+    default: 1
   }
+}, {
+  timestamps: true // Adds createdAt and updatedAt timestamps
 });
+
+
 // Helper function to get all categories, sections, and sets data
 const getAllCategoriesSectionsSets = async () => {
-  const papers = await QuestionPaper.find({}, { category: 1, sections: 1, _id: 0 }).lean();
+  const papers = await mongoose.model('QuestionPaper').find({}, { category: 1, sections: 1, _id: 0 }).lean();
   return papers;
 };
+
 // Helper function to get sections by category
 const getSectionsByCategory = async (category) => {
-  const paper = await QuestionPaper.findOne({ category }, { sections: 1, _id: 0 }).lean();
+  const paper = await mongoose.model('QuestionPaper').findOne({ category }, { sections: 1, _id: 0 }).lean();
   if (!paper) return null;
   return paper.sections;
 };
+
 // Helper function to get sets by category and section
 const getSetsByCategoryAndSection = async (category, sectionName) => {
-  const paper = await QuestionPaper.findOne({ category }, { sections: 1 }).lean();
+  const paper = await mongoose.model('QuestionPaper').findOne({ category }, { sections: 1 }).lean();
   if (!paper) return null;
   const section = paper.sections.find(sec => sec.name === sectionName);
   if (!section) return null;
   return section.sets;
 };
+
 // Static method for QuestionPaper to seed initial data
 questionPaperSchema.statics.seedInitialData = async function () {
   const categories = ['Beginner', 'Intermediate', 'Advanced'];
@@ -232,8 +249,10 @@ questionPaperSchema.statics.seedInitialData = async function () {
   }
   console.log('✅ Initial question paper data seeding completed (sets are preserved or managed via API).');
 };
+
 const Question = mongoose.model('Question', questionSchema);
 const QuestionPaper = mongoose.model('QuestionPaper', questionPaperSchema);
+
 /**
  * Fetch questions filtered by category, section, and set.
  * @param {String} category - Category name (e.g., 'Beginner')

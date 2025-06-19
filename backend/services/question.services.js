@@ -8,17 +8,23 @@ const mongoose = require('mongoose');
 /**
  * Creates a new question in the database.
  * Includes validation to ensure the question's category, section, and set are valid.
- * @param {Object} questionData - Data for the new question.
+ * @param {Object} questionData - Data for the new question, including 'marks'.
  * @returns {Promise<Document>} The saved question document.
  * @throws {Error} If validation fails or there's a database error.
  */
 async function createQuestion(questionData) {
   try {
-    const { category, section, set } = questionData;
+    const { category, section, set, marks } = questionData; // Destructure marks
     const isValid = await validateSectionAndSet(category, section, set); // Use internal validation helper
     if (!isValid) {
       throw new Error(`Invalid section "${section}" or set "${set}" for category "${category}". Please ensure the set exists.`);
     }
+
+    // Additional validation for marks
+    if (typeof marks !== 'number' || isNaN(marks) || marks < 0) {
+      throw new Error('Marks must be a non-negative number.');
+    }
+
     const question = new Question(questionData);
     return await question.save();
   } catch (error) {
@@ -58,7 +64,8 @@ async function getQuestionsBySet(category, section, set) {
 async function getAllQuestions() {
   try {
     return await Question.find().lean();
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching all questions:', error);
     throw error;
   }
@@ -110,23 +117,19 @@ async function deleteQuestionById(id) {
  * @returns {Promise<boolean>} True if the combination of category, section, and set is valid; otherwise, false.
  */
 async function validateSectionAndSet(category, sectionName, setName) {
-  // console.log(`--- Running validateSectionAndSet for Category: "${category}", Section: "${sectionName}", Set: "${setName}" ---`);
   try {
     const paper = await QuestionPaper.findOne({ category: category }).lean();
     if (!paper) {
-      // console.error(`Validation Failed: QuestionPaper for category "${category}" not found.`);
       return false;
     }
 
     const section = paper.sections.find(sec => sec.name === sectionName);
     if (!section) {
-      // console.error(`Validation Failed: Section "${sectionName}" not found in category "${category}".`);
       return false;
     }
 
     // Check if the provided set name exists within the found section's sets
     if (!section.sets || section.sets.length === 0) {
-      // console.error(`Validation Failed: Section "${sectionName}" has no sets defined.`);
       return false;
     }
     const setExists = section.sets.some(s => s.name === setName);
@@ -427,13 +430,27 @@ async function getSetsByCategoryAndSection(category, sectionName) {
 }
 /**
  * Service function to bulk insert questions into the database.
- * @param {Array} questions - An array of question objects parsed from the Excel file.
+ * @param {Array} questions - An array of question objects parsed from the Excel file, including 'marks'.
  * @returns {Promise<Array>} - The array of inserted question documents.
  */
 async function bulkUploadQuestions(questions) {
   if (!Array.isArray(questions) || questions.length === 0) {
     throw new Error("No questions provided for bulk upload.");
   }
+
+  // Optional: Add validation for each question object here before inserting
+  // For example, check if 'marks' is present and a valid number.
+  for (const questionData of questions) {
+    if (typeof questionData.marks !== 'number' || isNaN(questionData.marks) || questionData.marks < 0) {
+      throw new Error(`Invalid marks value encountered during bulk upload: ${questionData.marks}`);
+    }
+    // Add more validation as needed (e.g., presence of category, section, set, options)
+    const isValid = await validateSectionAndSet(questionData.category, questionData.section, questionData.set);
+    if (!isValid) {
+      throw new Error(`Invalid section or set for category "${questionData.category}" during bulk upload for question: ${questionData.questionText}`);
+    }
+  }
+
   // Use insertMany for efficient bulk insertion
   const insertedQuestions = await Question.insertMany(questions);
   return insertedQuestions;

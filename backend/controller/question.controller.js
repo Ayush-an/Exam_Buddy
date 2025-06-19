@@ -89,12 +89,13 @@ async function createQuestion(req, res) {
     // Start with a new object to build our clean questionData
     let questionData = {};
 
-    // --- Process general text fields ---
+    // --- Process general text fields, including marks ---
     questionData.category = req.body.category;
     questionData.section = req.body.section;
     questionData.set = req.body.set;
     questionData.questionText = req.body.questionText;
     questionData.correctAnswer = req.body.correctAnswer;
+    questionData.marks = Number(req.body.marks); // Convert marks to a number
 
     // --- Process questionImage and questionAudio from req.files ---
     const uploadedFiles = req.files || []; // Ensure it's an array even if empty
@@ -150,12 +151,18 @@ async function createQuestion(req, res) {
     // --- Validation Logic (more specific now) ---
 
     // Validate required scalar fields
-    const scalarRequiredFields = ['category', 'section', 'set', 'questionText', 'correctAnswer'];
+    const scalarRequiredFields = ['category', 'section', 'set', 'questionText', 'correctAnswer', 'marks'];
     for (const field of scalarRequiredFields) {
-      if (!questionData[field] || (typeof questionData[field] === 'string' && questionData[field].trim() === '')) {
+      if (!questionData[field] && questionData[field] !== 0 || (typeof questionData[field] === 'string' && questionData[field].trim() === '')) {
         console.error(`Validation error: Missing or empty required field - ${field}`);
         return res.status(400).json({ message: `Field "${field}" is required.` });
       }
+    }
+
+    // Validate marks specifically
+    if (typeof questionData.marks !== 'number' || isNaN(questionData.marks) || questionData.marks < 0) {
+      console.error(`Validation error: Invalid marks value - ${questionData.marks}`);
+      return res.status(400).json({ message: 'Marks must be a non-negative number.' });
     }
 
     // Validate options array explicitly
@@ -447,17 +454,18 @@ async function bulkUploadQuestions(req, res) {
     const questionsToSave = [];
 
     for (const row of jsonData) {
-      // --- FIX: Use the actual camelCase keys observed in the error log ---
-      const questionText = row.questionText; // Directly use 'questionText'
-      const optionA = row.optionA;         // Directly use 'optionA'
+      // --- Use the actual camelCase keys observed in the error log ---
+      const questionText = row.questionText;
+      const optionA = row.optionA;
       const optionB = row.optionB;
       const optionC = row.optionC;
       const optionD = row.optionD;
-      const correctAnswer = row.correctAnswer?.toLowerCase(); // Directly use 'correctAnswer'
+      const correctAnswer = row.correctAnswer?.toLowerCase();
+      const marks = Number(row.marks); // Retrieve marks from the Excel row and convert to number
 
-      // Skip row if essential data is missing
-      if (!questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer) {
-        console.warn('Skipping row due to missing essential data (check Excel headers):', row);
+      // Skip row if essential data is missing or marks are invalid
+      if (!questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer || isNaN(marks) || marks < 0) {
+        console.warn('Skipping row due to missing essential data or invalid marks (check Excel headers and data types):', row);
         continue; // Skip to the next row
       }
 
@@ -484,11 +492,12 @@ async function bulkUploadQuestions(req, res) {
         questionAudio,
         options,
         correctAnswer,
+        marks, // Include marks in the question object
       });
     }
 
     if (questionsToSave.length === 0) {
-      return res.status(400).json({ message: 'No valid questions found in the Excel file to process. Please ensure column headers match expected format (e.g., questionText, optionA, correctAnswer).' });
+      return res.status(400).json({ message: 'No valid questions found in the Excel file to process. Please ensure column headers match expected format (e.g., questionText, optionA, correctAnswer, marks) and data types are correct.' });
     }
 
     // Call the service layer to save questions

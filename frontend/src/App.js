@@ -10,14 +10,17 @@ import Question from './pages/Question.jsx';
 import PaperSetPage from './pages/PaperSetPage.jsx';
 import AnswerPage from './pages/AnswerPage.jsx';
 import ViewAnswer from './pages/ViewAnswer.jsx'; // Corrected import path casing
+import Welcome from './pages/wellcome.jsx'; // Corrected import path casing
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Default route */}
-        <Route path="/" element={<UserSignIn />} />
+        
+<Route path="/" element={<Welcome />} />
 
+<Route path="/welcome" element={<Welcome />} />
         {/* Admin routes */}
         <Route path="/admin-signin" element={<SignIn />} />
         <Route path="/admin-signup" element={<SignUp />} />
