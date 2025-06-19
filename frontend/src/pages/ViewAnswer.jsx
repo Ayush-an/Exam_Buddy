@@ -133,7 +133,7 @@ export default function ViewAnswer() {
             </div>
 
             <div className="mt-8 text-center">
-                <Link to="/answer" className="w-full px-6 py-3 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                <Link to="/exam" className="w-full px-6 py-3 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
                     Start a New Exam
                 </Link>
             </div>
