@@ -26,8 +26,6 @@ const { QuestionPaper } = require('./models/question.model'); // Ensure path is 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-
-// Static file serving
 app.use('/uploads', express.static('uploads'));
 
 // API Routes

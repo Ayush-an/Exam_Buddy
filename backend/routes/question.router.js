@@ -1,5 +1,4 @@
 // D:\Exam-portel\backend\routes\question.router.js
-
 const express = require('express');
 const router = express.Router();
 const questionController = require('../controller/question.controller');
@@ -21,7 +20,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage }).any();
 
 // --- Existing routes ---
-
 router.get('/categories', questionController.fetchAllCategories);
 router.get('/categories/:category/sections', questionController.fetchSectionsByCategory);
 router.get('/test', (req, res) => {

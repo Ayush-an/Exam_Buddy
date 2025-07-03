@@ -15,7 +15,8 @@ const MediaDisplay = ({ src, type, alt, className }) => {
     }
     if (type === 'audio') {
         return (
-            <audio controls src={fullSrc} className={className} onError={handleError}>
+            <audio controls className={className} onError={handleError}>
+                <source src={fullSrc} type="audio/mpeg" />
                 Your browser does not support the audio element.
             </audio>
         );
@@ -24,24 +25,27 @@ const MediaDisplay = ({ src, type, alt, className }) => {
 };
 
 export default function ViewAnswer() {
-    const { userId, attemptId } = useParams(); // Correct: Destructuring 'attemptId'
+    const { userId, examAttemptId } = useParams();
     const [reviewData, setReviewData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchAttemptReview = async () => {
-            if (!userId || userId === 'undefined' || !attemptId || attemptId === 'undefined') {
-                setError("Cannot load review. User ID or Attempt ID is missing.");
+            if (!userId || userId === 'undefined' || !examAttemptId || examAttemptId === 'undefined') {
+                setError("User ID or Attempt ID is missing.");
                 setLoading(false);
                 return;
             }
 
             try {
                 setLoading(true);
-                // FIX 1: Changed 'examAttemptId' to 'attemptId'
-                const res = await axios.get(`http://localhost:3000/api/user/exam-history/${userId}/${attemptId}`);
-                setReviewData(res.data); // FIX 2 & 3: Using 'res' to set 'reviewData'
+                const res = await axios.get(`http://localhost:3000/api/user/exam-review/${userId}/${examAttemptId}`);
+                if (res.data?.status && res.data.review) {
+                    setReviewData(res.data.review);
+                } else {
+                    throw new Error("Review data not found.");
+                }
             } catch (err) {
                 console.error("Error fetching exam review:", err);
                 setError(err.response?.data?.message || "Failed to load the exam review.");
@@ -50,11 +54,21 @@ export default function ViewAnswer() {
             }
         };
         fetchAttemptReview();
-    }, [userId, attemptId]); // Dependencies are correct
+    }, [userId, examAttemptId]);
 
     if (loading) return <div className="flex items-center justify-center h-screen"><div className="text-xl font-semibold">Loading Review...</div></div>;
-    if (error) return <div className="max-w-4xl p-4 mx-auto text-center text-red-500"><h2 className="text-2xl font-bold">Error</h2><p className="mt-2">{error}</p><Link to="/answer" className="inline-block px-4 py-2 mt-4 text-white bg-blue-600 rounded-md hover:bg-blue-700">Go to Exam Page</Link></div>;
-    if (!reviewData) return <div className="mt-4 text-center text-gray-500">Attempt review not found.</div>;
+    if (error) return (
+        <div className="max-w-4xl p-4 mx-auto text-center text-red-500">
+            <h2 className="text-2xl font-bold">Error</h2>
+            <p className="mt-2">{error}</p>
+            <Link to="/answer" className="inline-block px-4 py-2 mt-4 text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                Go to Exam Page
+            </Link>
+        </div>
+    );
+    if (!reviewData || !reviewData.answers) {
+        return <div className="mt-4 text-center text-gray-500">Attempt review not found.</div>;
+    }
 
     const { category, section, set, answers } = reviewData;
 
@@ -71,7 +85,7 @@ export default function ViewAnswer() {
                 {answers.map((answer, qIndex) => {
                     const question = answer.questionId;
                     return (
-                        <div key={question._id || qIndex} className="p-4 border border-gray-200 rounded-md bg-gray-50">
+                        <div key={question?._id || qIndex} className="p-4 border border-gray-200 rounded-md bg-gray-50">
                             <p className="mb-2 text-lg font-semibold">Q{qIndex + 1}: {question.questionText}</p>
                             <MediaDisplay
                                 src={question.questionImage}

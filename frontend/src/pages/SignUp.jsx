@@ -1,24 +1,21 @@
-// src/pages/SignUp.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 export default function SignUp() {
-  // Using 'username' for consistency with backend schema and form input
   const [form, setForm] = useState({ username: '', password: '', role: 'question-paper-setter' });
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Ensure 'username' is sent to match backend schema
       await axios.post('http://localhost:3000/api/admin/signup', {
         username: form.username,
         password: form.password,
         role: form.role
       });
       alert('✅ Admin created successfully! Please sign in.');
-      navigate('/signin'); // Redirect to sign-in page after successful signup
+      navigate('/signin');
     } catch (err) {
       console.error('Signup failed:', err.response ? err.response.data : err.message);
       alert(`Signup failed: ${err.response?.data?.error || 'Please try again.'}`);

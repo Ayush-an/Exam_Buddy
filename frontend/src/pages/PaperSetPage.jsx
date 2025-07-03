@@ -7,7 +7,7 @@ export default function PaperSetPage() {
   const [error, setError] = useState(null);
   const [selectedSetQuestions, setSelectedSetQuestions] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentSetInfo, setCurrentSetInfo] = useState(null); // Stores info about the set being viewed
+  const [currentSetInfo, setCurrentSetInfo] = useState(null);
 
   useEffect(() => {
     const fetchAllQuestionPapers = async () => {
@@ -25,31 +25,31 @@ export default function PaperSetPage() {
     };
 
     fetchAllQuestionPapers();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, []);
 
   // Function to fetch questions for a specific set
   const fetchQuestionsForSet = async (category, sectionName, setName) => {
     try {
-      // Show loading or clear previous questions
+
       setSelectedSetQuestions([]);
       setError(null);
-      setCurrentSetInfo({ category, sectionName, setName }); // Store current set info
+      setCurrentSetInfo({ category, sectionName, setName });
 
       const res = await axios.get(`http://localhost:3000/api/questions/${category}/${sectionName}/${setName}`);
       setSelectedSetQuestions(res.data);
-      setIsModalOpen(true); // Open the modal to display questions
+      setIsModalOpen(true);
     } catch (err) {
       console.error('Error fetching questions for set:', err.response ? err.response.data : err);
       setError(`Failed to load questions for set "${setName}". ${err.response?.data?.message || err.message}`);
-      setIsModalOpen(true); // Open modal to show error
+      setIsModalOpen(true);
     }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedSetQuestions([]); // Clear questions when closing modal
+    setSelectedSetQuestions([]);
     setCurrentSetInfo(null);
-    setError(null); // Clear errors
+    setError(null);
   };
 
   if (loading) {
@@ -60,7 +60,7 @@ export default function PaperSetPage() {
     );
   }
 
-  if (error && !isModalOpen) { // Display global error only if modal is not open
+  if (error && !isModalOpen) {  
     return (
       <div className="flex items-center justify-center min-h-screen bg-red-100">
         <p className="text-lg text-red-700">{error}</p>

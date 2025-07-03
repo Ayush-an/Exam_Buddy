@@ -1,10 +1,11 @@
-// D:\Exam-portel\backend\controller\user.controller.js
-
-const UserServices = require('../services/user.services'); // Assuming your services are here
-const { Question } = require('../models/question.model'); // Import Question model to get marks
+// D:\\Exam-portel\\backend\\controller\\user.controller.js
+const UserServices = require('../services/user.services');
+const { Question } = require('../models/question.model');
 const mongoose = require('mongoose');
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const path = require('path');
+const fs = require('fs');
 
 // --- Register User ---
 exports.register = async (req, res) => {
@@ -46,13 +47,11 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const token = crypto.randomBytes(32).toString("hex");
-    const expiration = Date.now() + 3600000; // 1 hour
+    const expiration = Date.now() + 3600000;
     const user = await UserServices.setResetToken(email, token, expiration);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // TODO: send email here
     console.log(`Reset link: http://yourdomain.com/reset-password/${token}`);
-
     res.json({ message: "Password reset link sent to email" });
   } catch (err) {
     console.error("Error in forgotPassword:", err);
@@ -104,7 +103,8 @@ exports.getUserByMobile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.params.id;
-    const updateData = req.body;
+    const updateData = { ...req.body };
+    delete updateData.profileImage;
     const updatedUser = await UserServices.updateUser(userId, updateData);
     if (!updatedUser) {
       return res.status(404).json({ status: false, message: "User not found" });
@@ -116,10 +116,97 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+// --- Get Profile Image ---
+exports.getProfileImage = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const profileImagePath = await UserServices.getProfileImage(userId);
+    if (!profileImagePath) {
+      return res.status(404).json({ status: false, message: "Profile image not found for this user." });
+    }
+    res.status(200).json({
+      status: true,
+      profileImage: profileImagePath,
+      message: "Profile image path fetched successfully."
+    });
+  } catch (error) {
+    console.error("Error in getProfileImage controller:", error);
+    res.status(500).json({ status: false, message: error.message || "Failed to fetch profile image." });
+  }
+};
+
+// --- Upload Profile Image ---
+exports.uploadProfileImage = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    if (!req.file) {
+      return res.status(400).json({ status: false, message: "No image file provided." });
+    }
+    const currentUser = await UserServices.getUserById(userId);
+    if (!currentUser) {
+      fs.unlink(req.file.path, err => err && console.error("Error deleting orphaned file:", err));
+      return res.status(404).json({ status: false, message: "User not found." });
+    }
+    if (currentUser.profileImage && currentUser.profileImage !== "" && currentUser.profileImage !== "/default-profile.png") {
+      const oldImagePath = path.join(__dirname, '..', 'public', currentUser.profileImage);
+      fs.unlink(oldImagePath, err => err && console.error("Error deleting old profile image:", err));
+    }
+    const newProfileImagePath = `/uploads/${req.file.filename}`;
+    const updatedUser = await UserServices.updateUser(userId, { profileImage: newProfileImagePath });
+    if (!updatedUser) {
+      fs.unlink(req.file.path, err => err && console.error("Error deleting orphaned new file:", err));
+      return res.status(500).json({ status: false, message: "Failed to update user with new profile image." });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Profile image uploaded successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error in uploadProfileImage controller:", error);
+    if (req.file) {
+      fs.unlink(req.file.path, err => err && console.error("Error deleting problematic uploaded file:", err));
+    }
+    next(error);
+  }
+};
+
+// --- Delete Profile Image ---
+exports.deleteProfileImage = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = await UserServices.getUserById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ status: false, message: "User not found." });
+    }
+    if (currentUser.profileImage && currentUser.profileImage !== "" && currentUser.profileImage !== "/default-profile.png") {
+      const oldImagePath = path.join(__dirname, '..', 'public', currentUser.profileImage);
+      fs.unlink(oldImagePath, err => err && console.error("Error deleting old profile image file from disk:", err));
+    }
+    const updatedUser = await UserServices.deleteProfileImage(userId);
+    if (!updatedUser) {
+      return res.status(500).json({ status: false, message: "Failed to clear profile image in database." });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Profile image deleted successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error in deleteProfileImage controller:", error);
+    next(error);
+  }
+};
+
 // --- Delete User ---
 exports.deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
+    const userToDelete = await UserServices.getUserById(userId);
+    if (userToDelete && userToDelete.profileImage && userToDelete.profileImage !== "" && userToDelete.profileImage !== "/default-profile.png") {
+      const imagePath = path.join(__dirname, '..', 'public', userToDelete.profileImage);
+      fs.unlink(imagePath, err => err && console.error("Error deleting user's profile image file during user deletion:", err));
+    }
     const deletedUser = await UserServices.deleteUser(userId);
     if (!deletedUser) {
       return res.status(404).json({ status: false, message: "User not found" });
@@ -132,126 +219,87 @@ exports.deleteUser = async (req, res) => {
 };
 
 // --- Submit Exam Result ---
-// This function is updated to calculate score and total marks possible server-side
 exports.submitExamResults = async (req, res) => {
   try {
-    // Destructure expected fields from the request body
-    // 'answers' array is crucial here, as it contains questionIds and user's selections.
     const { userId, category, section, set, duration, answers } = req.body;
-
-    // --- Validation: Ensure all required fields are present and correctly formatted ---
-    if (!userId || !category || !section || !set ||
-        typeof duration === 'undefined' || !Array.isArray(answers) || answers.length === 0) {
+    if (!userId || !category || !section || !set || typeof duration === 'undefined' || !Array.isArray(answers) || answers.length === 0) {
       console.error('Validation error: Missing or invalid required fields for exam attempt submission.');
       return res.status(400).json({ message: 'Missing or invalid required exam attempt data.' });
     }
-
-    // Validate userId format if it's expected to be a Mongoose ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.error('Validation error: Invalid userId format provided:', userId);
       return res.status(400).json({ message: 'Invalid User ID format.' });
     }
-
-    // --- Server-side Calculation of Score and Total Marks Possible ---
     let calculatedScore = 0;
     let totalMarksPossible = 0;
     let correctAnswersCount = 0;
     let totalQuestionsCount = answers.length;
 
-    // Extract all unique question IDs from the submitted answers
-    // FIX: Use 'new' keyword for ObjectId
-    const questionIds = answers.map(answer => new mongoose.Types.ObjectId(answer.questionId));
+    const questionIds = answers.map(a => new mongoose.Types.ObjectId(a.questionId));
+    const questions = await Question.find({ _id: { $in: questionIds } });
+    const questionMap = new Map();
+    questions.forEach(q => questionMap.set(q._id.toString(), q.marks));
 
-    // Fetch all relevant questions from the database in one go for efficiency
-    const questionsInExam = await Question.find({ '_id': { $in: questionIds } }).lean();
-
-    // Create a map for quick lookup of question marks by ID
-    const questionMarksMap = new Map();
-    questionsInExam.forEach(q => {
-      questionMarksMap.set(q._id.toString(), q.marks);
+    const processedAnswers = answers.map(a => {
+      const marks = questionMap.get(a.questionId.toString());
+      const isCorrect = a.isCorrect;
+      const awarded = isCorrect ? marks : 0;
+      if (isCorrect) correctAnswersCount++;
+      calculatedScore += awarded;
+      totalMarksPossible += marks;
+      return { questionId: a.questionId, selectedOption: a.selectedOption, isCorrect, marksAwarded: awarded };
     });
 
-    // Process each answer submitted by the user
-    const processedAnswers = answers.map(answer => {
-      const questionIdStr = answer.questionId.toString();
-      const questionMarks = questionMarksMap.get(questionIdStr);
-
-      if (questionMarks === undefined) {
-        // This should ideally not happen if questionIds are valid, but good for robustness
-        console.warn(`Question ID ${questionIdStr} not found in database during score calculation.`);
-        return {
-          questionId: answer.questionId,
-          selectedOption: answer.selectedOption,
-          isCorrect: false, // Treat as incorrect if question data is missing
-          marksAwarded: 0 // No marks awarded if question data is missing
-        };
-      }
-
-      let marksAwardedForThisQuestion = 0;
-      if (answer.isCorrect) {
-        marksAwardedForThisQuestion = questionMarks;
-        correctAnswersCount++;
-      }
-
-      calculatedScore += marksAwardedForThisQuestion;
-      totalMarksPossible += questionMarks; // Accumulate total possible marks
-
-      return {
-        questionId: answer.questionId,
-        selectedOption: answer.selectedOption,
-        isCorrect: answer.isCorrect,
-        marksAwarded: marksAwardedForThisQuestion
-      };
-    });
-
-    // Prepare data object to pass to service layer
-    const examAttemptData = {
-      userId,
-      category,
-      section,
-      set,
+    const newAttempt = await UserServices.saveExamResult({
+      userId, category, section, set,
       score: calculatedScore,
-      totalMarksPossible: totalMarksPossible, // Pass the calculated totalMarksPossible
+      totalMarksPossible,
       totalQuestions: totalQuestionsCount,
       correctAnswers: correctAnswersCount,
       duration,
       answers: processedAnswers,
       submittedAt: new Date(),
-    };
+    });
 
-    // Call the service layer to save the exam attempt
-    const newExamAttempt = await UserServices.saveExamResult(examAttemptData);
-
-    console.log('Exam attempt saved successfully via service:', newExamAttempt._id);
-
-    // Respond with success, including totalMarksPossible in the response
     res.status(201).json({
       message: 'Exam results submitted successfully!',
       examResult: {
-        mongoId: newExamAttempt._id,
-        score: newExamAttempt.score,
-        totalMarksPossible: newExamAttempt.totalMarksPossible, // Now returning it
-        totalQuestions: newExamAttempt.totalQuestions,
-        correctAnswers: newExamAttempt.correctAnswers,
-        duration: newExamAttempt.duration,
+        mongoId: newAttempt._id,
+        score: newAttempt.score,
+        totalMarksPossible: newAttempt.totalMarksPossible,
+        totalQuestions: newAttempt.totalQuestions,
+        correctAnswers: newAttempt.correctAnswers,
+        duration: newAttempt.duration,
       }
     });
-
   } catch (error) {
     console.error('Error in submitExamResults controller:', error);
     res.status(500).json({ message: 'Internal server error during exam submission.', error: error.message });
   }
 };
 
-// --- Exam Review Details ---
+// --- Get Exam Review Details ---
 exports.getExamReviewDetails = async (req, res) => {
   try {
     const { userId, examAttemptId } = req.params;
-    
-    const reviewData = await UserServices.getExamReviewDetails(userId, examAttemptId);
-    res.status(200).json(reviewData);
+    console.log("Fetching exam review for:", userId, examAttemptId);
+
+    const review = await UserServices.getExamReviewDetails(userId, examAttemptId);
+
+    console.log("Review data:", review); // See what is returned from service
+    res.status(200).json({ status: true, review });
   } catch (error) {
     console.error("Error in getExamReviewDetails controller:", error);
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
+  }
+};
+
+exports.getExamHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const history = await UserServices.getUserExamHistory(userId);
+    res.status(200).json({ status: true, history });
+  } catch (error) {
+    console.error("Error in getExamHistory controller:", error);
+    res.status(500).json({ status: false, message: error.message });
   }
 };

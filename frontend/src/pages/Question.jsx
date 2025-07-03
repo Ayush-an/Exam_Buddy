@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-
-// Defines the mapping of categories to their respective sections.
 const sectionMap = {
   Beginner: ['Beginner', 'Intermediate', 'Advanced', 'Pro Advanced'],
   Intermediate: ['Beginner Challenge', 'Intermediate Challenge', 'Advanced Challenge', 'Pro Advanced Challenge'],
@@ -9,22 +7,14 @@ const sectionMap = {
 };
 
 const Question = () => {
-  // State for available sections based on category selection.
   const [sections, setSections] = useState([]);
-  // State for available sets within a selected category and section.
   const [sets, setSets] = useState([]);
-  // State to toggle the "Create New Set" form.
   const [createNewSet, setCreateNewSet] = useState(false);
-  // State for the name of a new set being created.
   const [newSetName, setNewSetName] = useState('');
-  // State for the time limit of a new or selected set.
   const [setTimeLimit, setSetTimeLimit] = useState('');
-  // State for the Excel file to be uploaded for bulk questions.
   const [excelFile, setExcelFile] = useState(null);
-  // State for loading status during Excel upload.
   const [isUploadingExcel, setIsUploadingExcel] = useState(false);
 
-  // Form state for creating a single question, now including 'marks'.
   const [form, setForm] = useState({
     category: '',
     section: '',
@@ -39,26 +29,22 @@ const Question = () => {
       { type: 'text', content: '' }
     ],
     correctAnswer: 'a',
-    marks: 1, // New field for marks, defaulting to 1
+    marks: 1,
   });
 
   // Available categories for selection.
   const categories = ['Beginner', 'Intermediate', 'Advanced'];
 
-  /**
-   * Fetches sets based on the selected category and section.
-   * Updates the sets state and the time limit for the currently selected set.
-   */
   const fetchSets = useCallback(async (category, section) => {
     try {
       const res = await axios.get(`http://localhost:3000/api/question-papers/${category}/sections/${section}/sets`);
       setSets(res.data);
-      // If the previously selected set no longer exists, clear it.
+
       if (form.set && !res.data.some(s => s.name === form.set)) {
         setForm(prev => ({ ...prev, set: '' }));
         setSetTimeLimit('');
       } else if (form.set) {
-        // If the selected set exists, update its time limit.
+
         const currentSet = res.data.find(s => s.name === form.set);
         if (currentSet) {
           setSetTimeLimit(String(currentSet.timeLimitMinutes || ''));
@@ -72,24 +58,24 @@ const Question = () => {
       setForm(prev => ({ ...prev, set: '' }));
       setSetTimeLimit('');
     }
-  }, [form.set]); // Dependency on form.set to re-fetch if the selected set changes.
+  }, [form.set]);
 
   // Effect to update sections when the category changes.
   useEffect(() => {
     if (form.category) {
       setSections(sectionMap[form.category] || []);
-      // Reset relevant fields when category changes
+
       setForm(prev => ({ ...prev, section: '', set: '', questionText: '', questionImage: null, questionAudio: null, options: [{ type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }], correctAnswer: 'a', marks: 1 }));
-      setSets([]); // Clear sets
+      setSets([]);
     } else {
       setSections([]);
       setSets([]);
       setForm(prev => ({ ...prev, section: '', set: '', questionText: '', questionImage: null, questionAudio: null, options: [{ type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }], correctAnswer: 'a', marks: 1 }));
     }
-    setCreateNewSet(false); // Hide new set creation form
-    setNewSetName(''); // Clear new set name
-    setSetTimeLimit(''); // Clear set time limit
-    setExcelFile(null); // Clear Excel file
+    setCreateNewSet(false);
+    setNewSetName('');
+    setSetTimeLimit('');
+    setExcelFile(null);
   }, [form.category]);
 
   // Effect to fetch sets when category or section changes.
@@ -101,7 +87,7 @@ const Question = () => {
       setForm(prev => ({ ...prev, set: '', questionText: '', questionImage: null, questionAudio: null, options: [{ type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }, { type: 'text', content: '' }], correctAnswer: 'a', marks: 1 }));
       setSetTimeLimit('');
     }
-    setExcelFile(null); // Clear Excel file
+    setExcelFile(null);
   }, [form.category, form.section, fetchSets]);
 
   /**
@@ -118,11 +104,11 @@ const Question = () => {
       // API call to add the new set
       await axios.post(`http://localhost:3000/api/question-papers/${form.category}/sections/${form.section}/sets`, payload);
       alert('✅ Set created successfully');
-      setCreateNewSet(false); // Hide new set form
-      setForm(prev => ({ ...prev, set: newSetName.trim() })); // Select the newly created set
-      setNewSetName(''); // Clear new set name input
-      setSetTimeLimit(''); // Clear new set time limit input
-      fetchSets(form.category, form.section); // Re-fetch sets to update the dropdown
+      setCreateNewSet(false);
+      setForm(prev => ({ ...prev, set: newSetName.trim() }));
+      setNewSetName('');
+      setSetTimeLimit('');
+      fetchSets(form.category, form.section);
     } catch (err) {
       console.error('❌ Failed to create set:', err.response ? err.response.data : err);
       alert(`❌ Failed to create set: ${err.response ? err.response.data.message : err.message}`);
@@ -140,10 +126,10 @@ const Question = () => {
     try {
       await axios.patch(
         `http://localhost:3000/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`,
-        { timeLimitMinutes: Number(setTimeLimit) } // Send timeLimitMinutes to backend
+        { timeLimitMinutes: Number(setTimeLimit) }
       );
       alert('✅ Time limit updated');
-      fetchSets(form.category, form.section); // Re-fetch sets to reflect changes in UI
+      fetchSets(form.category, form.section);
     } catch (err) {
       console.error('❌ Failed to update time limit:', err.response ? err.response.data : err);
       alert(`❌ Failed to update time limit: ${err.response ? err.response.data.message : err.message}`);
@@ -164,8 +150,8 @@ const Question = () => {
         `http://localhost:3000/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`
       );
       alert('✅ Time limit deleted');
-      setSetTimeLimit(''); // Clear time limit input field
-      fetchSets(form.category, form.section); // Re-fetch sets to update UI
+      setSetTimeLimit('');
+      fetchSets(form.category, form.section);
     } catch (err) {
       console.error('❌ Failed to delete time limit:', err.response ? err.response.data : err);
       alert(`❌ Failed to delete time limit: ${err.response ? err.response.data.message : err.message}`);
@@ -193,12 +179,12 @@ const Question = () => {
         { type: 'text', content: '' }
       ],
       correctAnswer: 'a',
-      marks: 1, // Reset marks
+      marks: 1,
     }));
     setCreateNewSet(false);
     setNewSetName('');
     setSetTimeLimit('');
-    setExcelFile(null); // Clear Excel file
+    setExcelFile(null);
   };
 
   /**
@@ -221,12 +207,12 @@ const Question = () => {
         { type: 'text', content: '' }
       ],
       correctAnswer: 'a',
-      marks: 1, // Reset marks
+      marks: 1,
     }));
     setCreateNewSet(false);
     setNewSetName('');
     setSetTimeLimit('');
-    setExcelFile(null); // Clear Excel file
+    setExcelFile(null);
   };
 
   /**
@@ -242,7 +228,7 @@ const Question = () => {
     } else {
       setSetTimeLimit('');
     }
-    setExcelFile(null); // Clear Excel file
+    setExcelFile(null);
   };
 
   /**
@@ -290,7 +276,7 @@ const Question = () => {
     if (form.questionImage) formData.append('questionImage', form.questionImage);
     if (form.questionAudio) formData.append('questionAudio', form.questionAudio);
     formData.append('correctAnswer', form.correctAnswer);
-    formData.append('marks', form.marks); // Include marks in FormData
+    formData.append('marks', form.marks);
 
     form.options.forEach((opt, idx) => {
       const contentValue = opt.type === 'text' ? opt.content : (opt.content instanceof File ? opt.content : null);
@@ -303,7 +289,7 @@ const Question = () => {
     try {
       // API call to create the question
       await axios.post('http://localhost:3000/api/questions/create', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' } // Important for FormData
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       alert('✅ Question created successfully!');
@@ -322,14 +308,14 @@ const Question = () => {
           { type: 'text', content: '' }
         ],
         correctAnswer: 'a',
-        marks: 1, // Reset marks
+        marks: 1,
       });
       setSections([]);
       setSets([]);
       setCreateNewSet(false);
       setNewSetName('');
       setSetTimeLimit('');
-      setExcelFile(null); // Clear Excel file
+      setExcelFile(null);
     } catch (err) {
       console.error('❌ Error submitting question:', err.response ? err.response.data : err);
       alert(`❌ Error submitting question: ${err.response ? err.response.data.message : err.message}`);
@@ -362,14 +348,13 @@ const Question = () => {
     excelFormData.append('category', form.category);
     excelFormData.append('section', form.section);
     excelFormData.append('set', form.set);
-    // No need to append marks here, as marks for bulk upload come from the Excel row itself.
 
     try {
       await axios.post('http://localhost:3000/api/questions/bulk-upload', excelFormData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('✅ Excel file uploaded successfully! Questions will be processed.');
-      setExcelFile(null); // Clear the selected file
+      setExcelFile(null);
     } catch (err) {
       console.error('❌ Error uploading Excel file:', err.response ? err.response.data : err);
       alert(`❌ Error uploading Excel file: ${err.response ? err.response.data.message : err.message}`);
@@ -441,7 +426,7 @@ const Question = () => {
                     setCreateNewSet(true);
                     setNewSetName('');
                     setSetTimeLimit('');
-                    setExcelFile(null); // Clear Excel file
+                    setExcelFile(null);
                   }}
                   className="px-6 py-2 mt-4 text-sm font-medium text-blue-700 transition duration-150 ease-in-out bg-blue-100 rounded-lg shadow-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
@@ -685,5 +670,4 @@ const Question = () => {
     </div>
   );
 };
-
 export default Question;

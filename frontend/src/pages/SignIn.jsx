@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function SignIn() {
-  // Using 'username' for consistency with backend schema and form input
   const [form, setForm] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
@@ -11,32 +10,28 @@ export default function SignIn() {
     e.preventDefault();
     try {
       const res = await axios.post('http://localhost:3000/api/admin/signin', form);
-      const admin = res.data.admin; // Access the 'admin' object from the response
-
-      // Store admin data in localStorage (consider secure alternatives for real apps)
+      const admin = res.data.admin;
       localStorage.setItem('admin', JSON.stringify(admin));
-
-      // Redirect based on role
+      
       if (admin.role === 'question-paper-setter') {
         alert('Logged in as Question Paper Setter!');
-        navigate('/question'); // Navigate to the Question creation page
+        navigate('/question');
       } else if (admin.role === 'moderator') {
         alert('Logged in as Moderator!');
-        navigate('/paper-set'); // Navigate to the PaperSetPage
+        navigate('/paper-set');
       } else {
-        // Fallback for unexpected roles or if role is not strictly 'admin'
+
         alert('Login successful, but role not recognized for specific navigation.');
-        navigate('/admin-dashboard'); // A generic admin dashboard or home
+        navigate('/admin-dashboard');
       }
     } catch (err) {
       console.error('Login failed:', err.response ? err.response.data : err.message);
-      // Display a more informative error from backend if available
       alert(`Login failed: ${err.response?.data?.message || 'Please check your credentials.'}`);
     }
   };
 
   const handleSignUpClick = () => {
-    navigate('/admin-signup'); // Navigate to the /signup route
+    navigate('/admin-signup');
   };
 
   return (
