@@ -243,7 +243,7 @@ export default function UserSignUp() {
           Already have an account?{' '}
           <button
             type="button"
-            onClick={() => navigate('/user-signin')}
+            onClick={() => navigate('/auth')}
             className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none"
           >
             Sign In

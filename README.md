@@ -94,3 +94,19 @@ Back-End : Node.js and Express.js is user and Authentation & Token for each user
 
 
 Front-End: Rect Native, Express.js, Tailwind css, Lottie , Animation
+
+
+
+1st page is http://localhost:5000/auth -> this page include user sign in and also user sign up then it will go in
+ ->    http://localhost:5000/exam  this is second page (main page)
+
+
+ for profile->http://localhost:5000/profile
+
+ for subscription -> http://localhost:5000/subscription
+
+ for settings-> http://localhost:5000/settings
+
+ for support -> http://localhost:5000/support
+
+ this is complite in another way just like a normal anthorpy websocket and another way is web

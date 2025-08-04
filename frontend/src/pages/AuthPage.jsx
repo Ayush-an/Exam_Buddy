@@ -2,10 +2,21 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserSignIn from './UserSignIn';
 import UserSignUp from './UserSignUp';
-import { FaUserAstronaut, FaUserPlus } from 'react-icons/fa';
+import AdminSignIn from './SignIn';
+import AdminSignUp from './SignUp';
+import { FaUserAstronaut, FaUserPlus, FaUserShield } from 'react-icons/fa';
 
 export default function AuthPage() {
   const [isSignIn, setIsSignIn] = useState(true);
+  const [authType, setAuthType] = useState('user'); // 'user' or 'admin'
+
+  const renderForm = () => {
+    if (authType === 'user') {
+      return isSignIn ? <UserSignIn /> : <UserSignUp />;
+    } else {
+      return isSignIn ? <AdminSignIn /> : <AdminSignUp />;
+    }
+  };
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden text-white bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 md:flex-row">
@@ -13,14 +24,36 @@ export default function AuthPage() {
       {/* Left Panel */}
       <div className="z-10 flex flex-col items-center justify-center w-full px-6 py-12 text-center md:w-1/2 md:py-20 md:px-12">
         <FaUserAstronaut className="mb-6 text-5xl text-white drop-shadow-xl" />
-        <h1 className="mb-4 text-4xl font-extrabold tracking-wider text-white md:text-5xl drop-shadow-md">
-          🚀 Exam Portal
-        </h1>
+        <h1 className="mb-4 text-4xl font-extrabold tracking-wider text-white md:text-5xl drop-shadow-md">🚀 Exam Portal</h1>
         <p className="max-w-md mb-8 text-lg text-center text-gray-300">
           Sign in to access your dashboard or create a new account to begin your journey.
         </p>
 
-        {/* Toggle Buttons */}
+        {/* Mode Toggle: User / Admin */}
+        <div className="flex mb-6 space-x-4">
+          <button
+            onClick={() => setAuthType('user')}
+            className={`px-6 py-2 rounded-full text-md font-semibold transition duration-300 ease-in-out ${
+              authType === 'user'
+                ? 'bg-white text-indigo-900 shadow-xl'
+                : 'bg-white/10 hover:bg-white/20 text-white border border-white/30'
+            }`}
+          >
+            👤 User
+          </button>
+          <button
+            onClick={() => setAuthType('admin')}
+            className={`px-6 py-2 rounded-full text-md font-semibold transition duration-300 ease-in-out ${
+              authType === 'admin'
+                ? 'bg-white text-indigo-900 shadow-xl'
+                : 'bg-white/10 hover:bg-white/20 text-white border border-white/30'
+            }`}
+          >
+            🛡️ Admin
+          </button>
+        </div>
+
+        {/* Sign In / Sign Up Toggle */}
         <div className="flex space-x-4">
           <button
             onClick={() => setIsSignIn(true)}
@@ -51,29 +84,16 @@ export default function AuthPage() {
       <div className="z-10 flex items-center justify-center w-full px-4 py-12 md:w-1/2 md:px-10">
         <div className="relative w-full max-w-xl mx-auto overflow-hidden text-gray-800 bg-white shadow-2xl rounded-2xl dark:bg-gray-900 dark:text-white">
           <AnimatePresence mode="wait">
-            {isSignIn ? (
-              <motion.div
-                key="signin"
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -100, opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="p-6 md:p-10"
-              >
-                <UserSignIn />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="signup"
-                initial={{ x: -100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 100, opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="p-6 md:p-10"
-              >
-                <UserSignUp />
-              </motion.div>
-            )}
+            <motion.div
+              key={`${authType}-${isSignIn ? 'signin' : 'signup'}`}
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="p-6 md:p-10"
+            >
+              {renderForm()}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>

@@ -10,7 +10,8 @@ import Question from './pages/Question.jsx';
 import PaperSetPage from './pages/PaperSetPage.jsx';
 import AnswerPage from './pages/AnswerPage.jsx';
 import ViewAnswer from './pages/ViewAnswer.jsx';
-import Welcome from './pages/wellcome.jsx';
+//import Welcome from './pages/wellcome.jsx';  <Route path="/welcome" element={<Welcome />} /> {/* This route is redundant if "/" already points to Welcome */}
+
 import Profile from './pages/Profile.jsx';
 import Settings from './pages/components/Settings.jsx';
 import Support from './pages/components/Support.jsx';
@@ -36,9 +37,8 @@ function App() {
 
       <Routes>
         {/* Default route */}
-        <Route path="/" element={<Welcome />} />
-        <Route path="/welcome" element={<Welcome />} /> {/* This route is redundant if "/" already points to Welcome */}
-
+        <Route path="/" element={<AuthPage />} />
+       
         {/* Admin routes */}
         <Route path="/admin-signin" element={<SignIn />} />
         <Route path="/admin-signup" element={<SignUp />} />
