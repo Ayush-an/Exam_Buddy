@@ -58,7 +58,7 @@ export default function UserSignUp() {
 
     try {
       const { confirmPassword, ...userData } = form;
-await axios.post(`${process.env.REACT_APP_API_URL}/api/user/register`, userData);
+await axios.post(`${process.env.REACT_APP_API_URL}/user/register`, userData);
       alert('✅ Registration successful! Please sign in.');
       navigate('/user-signin');
     } catch (err) {

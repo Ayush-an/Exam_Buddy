@@ -32,7 +32,7 @@ const Question = () => {
 
   const fetchSets = useCallback(async (category, section) => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/question-papers/${category}/sections/${section}/sets`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/question-papers/${category}/sections/${section}/sets`);
 
 
       setSets(res.data);
@@ -99,7 +99,7 @@ const Question = () => {
         payload.timeLimitMinutes = Number(setTimeLimit);
       }
       // API call to add the new set
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/question-papers/${form.category}/sections/${form.section}/sets`, payload);
+      await axios.post(`${process.env.REACT_APP_API_URL}/question-papers/${form.category}/sections/${form.section}/sets`, payload);
 
       alert('✅ Set created successfully');
       setCreateNewSet(false);
@@ -123,7 +123,7 @@ const Question = () => {
     }
     try {
       await axios.patch(
-  `${process.env.REACT_APP_API_URL}/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`,
+  `${process.env.REACT_APP_API_URL}/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`,
   { timeLimitMinutes: Number(setTimeLimit) }
 );
 
@@ -146,7 +146,7 @@ const Question = () => {
     try {
       // API call to delete the time limit for the selected set
       await axios.delete(
-  `${process.env.REACT_APP_API_URL}/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`
+  `${process.env.REACT_APP_API_URL}/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`
 );
 
       alert('✅ Time limit deleted');
@@ -288,7 +288,7 @@ const Question = () => {
 
     try {
       // API call to create the question
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/questions/create`, formData, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/questions/create`, formData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });
 
@@ -351,7 +351,7 @@ const Question = () => {
     excelFormData.append('set', form.set);
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/questions/bulk-upload`, excelFormData, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/questions/bulk-upload`, excelFormData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });
 

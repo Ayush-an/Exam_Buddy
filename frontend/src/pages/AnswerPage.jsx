@@ -14,7 +14,7 @@ import AdvancedImage from './assets/third.png'; import ProAdvancedImage from './
 
 const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
 
-const API = axios.create({ baseURL: `${SERVER_BASE_URL}/api`, });
+const API = axios.create({ baseURL: `${SERVER_BASE_URL}`, });
 export default function AnswerPage() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);

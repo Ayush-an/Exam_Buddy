@@ -15,7 +15,7 @@ export default function PaperSetPage() {
         setLoading(true);
         // This endpoint returns all categories, sections, and sets
        // const res = await axios.get('http://localhost:3000/api/question-papers');
-        const res = await axios.get(`${SERVER_BASE_URL}/api/question-papers`);
+        const res = await axios.get(`${SERVER_BASE_URL}/question-papers`);
 
         setQuestionPapers(res.data);
       } catch (err) {
@@ -37,7 +37,7 @@ export default function PaperSetPage() {
       setError(null);
       setCurrentSetInfo({ category, sectionName, setName });
 
-      const res = await axios.get(`${SERVER_BASE_URL}/api/questions/${category}/${sectionName}/${setName}`);
+      const res = await axios.get(`${SERVER_BASE_URL}/questions/${category}/${sectionName}/${setName}`);
       setSelectedSetQuestions(res.data);
       setIsModalOpen(true);
     } catch (err) {

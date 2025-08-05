@@ -31,7 +31,7 @@ const Profile = () => {
 
   const fetchUserProfile = async (userId) => {
     try {
-      const res = await axios.get(`${SERVER_BASE_URL}/api/user/users/${userId}`);
+      const res = await axios.get(`${SERVER_BASE_URL}/user/users/${userId}`);
       if (res.data.status) {
         const user = res.data.user;
         setUserData(user);
@@ -55,7 +55,7 @@ const Profile = () => {
 
   const fetchExamHistory = async (userId) => {
     try {
-      const res = await axios.get(`${SERVER_BASE_URL}/api/user/exam-history/${userId}`);
+      const res = await axios.get(`${SERVER_BASE_URL}/user/exam-history/${userId}`);
       if (res.data.status) {
         const history = res.data.history || [];
         setPapersAttempted(history.length);
@@ -73,7 +73,7 @@ const Profile = () => {
 
   const handleUpdate = async () => {
     try {
-      const res = await axios.patch(`${SERVER_BASE_URL}/api/user/users/${userData._id}`, formData);
+      const res = await axios.patch(`${SERVER_BASE_URL}/user/users/${userData._id}`, formData);
       if (res.data.status) {
         alert('Profile updated successfully!');
         localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -94,7 +94,7 @@ const Profile = () => {
 
     try {
       const res = await axios.post(
-        `${SERVER_BASE_URL}/api/user/users/${userData._id}/profile-image`,
+        `${SERVER_BASE_URL}/user/users/${userData._id}/profile-image`,
         form,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -115,7 +115,7 @@ const Profile = () => {
 
     try {
       const res = await axios.delete(
-        `${SERVER_BASE_URL}/api/user/users/${userData._id}/profile-image`
+        `${SERVER_BASE_URL}/user/users/${userData._id}/profile-image`
       );
       if (res.data.status) {
         setProfileImage('');
