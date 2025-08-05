@@ -1,3 +1,4 @@
+// backend/index.js
 const app = require("./app");
 const db = require('./config/db')
 const UserModel = require('./models/user.model');
