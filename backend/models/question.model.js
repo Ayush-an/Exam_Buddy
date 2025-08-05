@@ -48,7 +48,7 @@ const sectionSchema = new mongoose.Schema({
         timeLimitMinutes: {
           type: Number,
           min: 1,
-          default: null // Can be null if the set does not have a specific time limit
+          default: null
         }
       }
     ],
@@ -101,9 +101,8 @@ const questionSchema = new mongoose.Schema({
         // 'this' refers to the current question document being validated
         const { category, section } = this;
         // Find the corresponding QuestionPaper document for the given category
-        // Use mongoose.model('QuestionPaper') to avoid circular dependency if QuestionPaper is defined later
         const paper = await mongoose.model('QuestionPaper').findOne({ category });
-        if (!paper) return false; // Category not found
+        if (!paper) return false;
 
         // Find the section within that question paper
         const matchedSection = paper.sections.find(sec => sec.name === section);
@@ -116,24 +115,24 @@ const questionSchema = new mongoose.Schema({
     }
   },
   questionText: { type: String, required: true }, // Added required: true as question text is essential
-  questionImage: String, // Path to an image file (optional)
-  questionAudio: String, // Path to an audio file (optional)
+  questionImage: String, // Path to an image file
+  questionAudio: String, // Path to an audio file
   options: [ // Array of possible answers
     {
-      type: { // Type of the option content (e.g., 'text', 'image', 'audio')
+      type: { // 'text', 'image', 'audio'
         type: String,
         enum: ['text', 'image', 'audio'],
         required: true
       },
-      content: { // The actual content (text string or path to file)
+      content: {
         type: String,
         required: true
       }
     }
   ],
-  correctAnswer: { // Letter of the correct option (e.g., 'a', 'b', 'c', 'd')
+  correctAnswer: { // 'a', 'b', 'c', 'd'
     type: String,
-    enum: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'], // Extended enum for more options if needed
+    enum: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
     required: true
   },
   marks: { // NEW FIELD ADDED
@@ -270,8 +269,5 @@ const fetchQuestionsByCategorySectionSet = async (category, section, set) => {
     set
   }).lean();
   return questions;
-
 };
-
-
 module.exports = { Question, QuestionPaper, fetchQuestionsByCategorySectionSet };

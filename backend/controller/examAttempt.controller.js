@@ -6,8 +6,8 @@ exports.getAttemptById = async (req, res) => {
     const { id } = req.params;
 
     const attempt = await ExamAttempt.findById(id)
-      .populate('examId') // if needed
-      .populate('userId', 'username') // if needed
+      .populate('examId')
+      .populate('userId', 'username')
 
     if (!attempt) {
       return res.status(404).json({ message: 'Exam attempt not found' });

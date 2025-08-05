@@ -110,3 +110,10 @@ Front-End: Rect Native, Express.js, Tailwind css, Lottie , Animation
  for support -> http://localhost:5000/support
 
  this is complite in another way just like a normal anthorpy websocket and another way is web
+
+
+ mongodb+srv://mohiteteena:Teena321!@cluster1.tfzss.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1
+
+ mongodb+srv://mohiteteena:Teena321!@cluster1.tfzss.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1
+
+ mongodb+srv://agrawalayushgopal:123@exambuddy.pddrksf.mongodb.net/?retryWrites=true&w=majority&appName=ExamBuddy

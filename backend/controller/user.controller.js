@@ -285,7 +285,7 @@ exports.getExamReviewDetails = async (req, res) => {
 
     const review = await UserServices.getExamReviewDetails(userId, examAttemptId);
 
-    console.log("Review data:", review); // See what is returned from service
+    console.log("Review data:", review);
     res.status(200).json({ status: true, review });
   } catch (error) {
     console.error("Error in getExamReviewDetails controller:", error);

@@ -1,17 +1,15 @@
 const mongoose = require('mongoose');
-const ExamAttempt = require('../models/ExamAttempt'); // Adjust path as needed
-const User = require('../models/user.model'); // Also needed for linking exam history
-const { Question } = require('../models/question.model'); // NEW: Import Question model to get marks
+const ExamAttempt = require('../models/ExamAttempt');
+const User = require('../models/user.model');
+const { Question } = require('../models/question.model');
 
-// This looks like it's from a controller or service file, e.g., user.controller.js
+// This controller or service file
 exports.submitExamResults = async (req, res) => {
   try {
-    // Destructure expected fields from the request body
-    // 'score' and 'totalQuestions' might be re-calculated or validated server-side.
-    // 'answers' array is crucial here.
+    // Destructure expected fields from the request body & 'score' and 'totalQuestions' might be re-calculated or validated server-side.
     const { userId, category, section, set, duration, answers } = req.body;
 
-    // --- Validation: Ensure all required fields are present and correctly formatted ---
+    // Validation: Ensure all required fields are present and correctly formatted 
     if (!userId || !category || !section || !set ||
         typeof duration === 'undefined' || !Array.isArray(answers) || answers.length === 0) {
       console.error('Validation error: Missing or invalid required fields for exam attempt submission.');
@@ -24,7 +22,7 @@ exports.submitExamResults = async (req, res) => {
       return res.status(400).json({ message: 'Invalid User ID format.' });
     }
 
-    // --- Server-side Calculation of Score and Total Marks Possible ---
+    // Server-side Calculation of Score and Total Marks Possible
     let calculatedScore = 0;
     let totalMarksPossible = 0;
     let correctAnswersCount = 0;
@@ -53,8 +51,8 @@ exports.submitExamResults = async (req, res) => {
         return {
           questionId: answer.questionId,
           selectedOption: answer.selectedOption,
-          isCorrect: false, // Treat as incorrect if question data is missing
-          marksAwarded: 0 // No marks awarded if question data is missing
+          isCorrect: false,
+          marksAwarded: 0 
         };
       }
 
@@ -65,7 +63,7 @@ exports.submitExamResults = async (req, res) => {
       }
 
       calculatedScore += marksAwardedForThisQuestion;
-      totalMarksPossible += questionMarks; // Accumulate total possible marks
+      totalMarksPossible += questionMarks;
 
       return {
         questionId: answer.questionId,
@@ -82,11 +80,11 @@ exports.submitExamResults = async (req, res) => {
       section,
       set,
       score: calculatedScore,
-      totalMarksPossible: totalMarksPossible, // NEW: Store total possible marks
-      totalQuestions: totalQuestionsCount, // Use the actual count of questions submitted
-      correctAnswers: correctAnswersCount, // Use the calculated correct answers count
+      totalMarksPossible: totalMarksPossible,
+      totalQuestions: totalQuestionsCount,
+      correctAnswers: correctAnswersCount,
       duration,
-      answers: processedAnswers, // Use the processed answers with marksAwarded
+      answers: processedAnswers,
       submittedAt: new Date(),
     });
 
@@ -108,20 +106,17 @@ exports.submitExamResults = async (req, res) => {
     } catch (userUpdateError) {
       console.warn(`Warning: Could not link exam attempt ${newExamAttempt._id} to user ${userId} history:`, userUpdateError.message);
     }
-
-    // Respond with success
     res.status(201).json({
       message: 'Exam results submitted successfully!',
       examResult: {
         mongoId: newExamAttempt._id, // Return the MongoDB ObjectId
         score: newExamAttempt.score,
-        totalMarksPossible: newExamAttempt.totalMarksPossible, // NEW: Return total marks possible
+        totalMarksPossible: newExamAttempt.totalMarksPossible,
         totalQuestions: newExamAttempt.totalQuestions,
         correctAnswers: newExamAttempt.correctAnswers,
         duration: newExamAttempt.duration,
       }
     });
-
   } catch (error) {
     console.error('Error in submitExamResults controller:', error);
     // This catch block handles other errors, like Mongoose schema validation errors

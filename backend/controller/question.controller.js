@@ -1,17 +1,15 @@
 // D:\Exam-portel\backend\controller\question.controller.js
 
 const questionServices = require('../services/question.services');
-const { Question } = require('../models/question.model'); // Still needed for model definition if used directly for validation or structure reference
-const mongoose = require('mongoose'); // For ObjectId validation if needed in controller directly
-const crypto = require("crypto"); // Assuming this is used elsewhere, though not in this specific file's snippets.
-const xlsx = require('xlsx'); // For reading Excel files
-const path = require('path'); // For path manipulation
-const fs = require('fs'); // For file system operations, particularly for cleanup
+const { Question } = require('../models/question.model');
+const mongoose = require('mongoose');
+const crypto = require("crypto");
+const xlsx = require('xlsx');
+const path = require('path');
+const fs = require('fs'); 
 
 // ======================= Question Paper Management ==========================
-/**
- * Get all question paper categories and their sections and sets.
- */
+/** Get all question paper categories and their sections and sets */
 async function getAllQuestionPapers(req, res) {
   try {
     const questionPapers = await questionServices.getAllQuestionPapers();
@@ -22,9 +20,7 @@ async function getAllQuestionPapers(req, res) {
   }
 }
 
-/**
- * Get question paper by category.
- */
+/** Get question paper by category */
 async function getQuestionPapersByCategory(req, res) {
   const { category } = req.params;
   try {
@@ -37,9 +33,7 @@ async function getQuestionPapersByCategory(req, res) {
   }
 }
 
-/**
- * Get section details for a category.
- */
+/** Get section details for a category */
 async function getSectionDetails(req, res) {
   const { category, sectionName } = req.params;
   try {
@@ -54,9 +48,7 @@ async function getSectionDetails(req, res) {
   }
 }
 
-/**
- * Create or update a question paper.
- */
+/** Create or update a question paper */
 async function createOrUpdateQuestionPaper(req, res) {
   const { category, sections } = req.body;
   if (!category || !Array.isArray(sections)) {
@@ -75,9 +67,7 @@ async function createOrUpdateQuestionPaper(req, res) {
 }
 
 // ========================== Question Management =============================
-/**
- * Create a new question.
- */
+/** Create a new question */
 async function createQuestion(req, res) {
   try {
     // Log req.body and req.files to inspect the incoming data structure after Multer
@@ -95,10 +85,10 @@ async function createQuestion(req, res) {
     questionData.set = req.body.set;
     questionData.questionText = req.body.questionText;
     questionData.correctAnswer = req.body.correctAnswer;
-    questionData.marks = Number(req.body.marks); // Convert marks to a number
+    questionData.marks = Number(req.body.marks);
 
     // --- Process questionImage and questionAudio from req.files ---
-    const uploadedFiles = req.files || []; // Ensure it's an array even if empty
+    const uploadedFiles = req.files || [];
 
     const qImageFile = uploadedFiles.find(f => f.fieldname === 'questionImage');
     const qAudioFile = uploadedFiles.find(f => f.fieldname === 'questionAudio');
@@ -136,14 +126,14 @@ async function createQuestion(req, res) {
         if (optionFile) {
             return {
                 type: option.type,
-                content: optionFile.path // Use the path from the uploaded file
+                content: optionFile.path
             };
         }
         // For text options, or if no file was uploaded for an image/audio option,
         // use the content directly from req.body (which would be the string text or null/empty)
         return {
             type: option.type,
-            content: option.content // This is the 'content' from req.body, or previously set to a file path
+            content: option.content
         };
     });
 
@@ -198,7 +188,7 @@ async function createQuestion(req, res) {
 
   } catch (error) {
     console.error('--- Error in createQuestion controller ---');
-    console.error('Error object:', error); // Log the full error object for detailed insights
+    console.error('Error object:', error);
 
     if (error.message && error.message.startsWith('Invalid section')) {
       return res.status(400).json({ message: error.message });
@@ -215,9 +205,7 @@ async function createQuestion(req, res) {
   }
 }
 
-/**
- * Get all questions for a specific category, section, and set.
- */
+/** Get all questions for a specific category, section, and set */
 async function getQuestionsBySet(req, res) {
   const { category, section, set } = req.params;
   try {
@@ -232,9 +220,7 @@ async function getQuestionsBySet(req, res) {
   }
 }
 
-/**
- * Get all questions.
- */
+/** Get all questions */
 async function getAllQuestions(req, res) {
   try {
     const questions = await questionServices.getAllQuestions();
@@ -245,9 +231,7 @@ async function getAllQuestions(req, res) {
   }
 }
 
-/**
- * Get question by ID.
- */
+/** Get question by ID */
 async function getQuestionById(req, res) {
   const { id } = req.params;
   try {
@@ -262,9 +246,7 @@ async function getQuestionById(req, res) {
   }
 }
 
-/**
- * Delete question by ID.
- */
+/** Delete question by ID */
 async function deleteQuestionById(req, res) {
   const { id } = req.params;
   try {
@@ -280,9 +262,7 @@ async function deleteQuestionById(req, res) {
 }
 
 // ======================= Set Management ==========================
-/**
- * Get all sets of a section.
- */
+/** Get all sets of a section. */
 async function getSets(req, res) {
   const { category, sectionName } = req.params;
 
@@ -295,10 +275,7 @@ async function getSets(req, res) {
   }
 }
 
-/**
- * Add a new set to a section.
- * Expects { name, timeLimitMinutes (optional) } in req.body
- */
+/** Add a new set to a section. Expects { name, timeLimitMinutes (optional) } in req.body */
 async function addSet(req, res) {
   const { category, sectionName } = req.params;
   const newSet = {
@@ -306,12 +283,10 @@ async function addSet(req, res) {
     timeLimitMinutes: req.body.timeLimit ? parseInt(req.body.timeLimit, 10) : undefined,
   };
   try {
-    // Basic validation in the controller as a good practice
+    // Basic validation in the controller
     if (!newSet.name || typeof newSet.name !== 'string' || newSet.name.trim() === '') {
         return res.status(400).json({ message: 'Set name is required and cannot be empty.' });
     }
-    // The service layer already throws specific errors like "Set already exists" or "Category not found",
-    // which your controller correctly catches and sends.
     const sets = await questionServices.addSet(category, sectionName, newSet);
     res.status(201).json({ message: 'Set added successfully', sets });
   } catch (error) {
@@ -320,9 +295,7 @@ async function addSet(req, res) {
   }
 }
 
-/**
- * Update set name and/or time limit.
- */
+/** Update set name and/or time limit */
 async function updateSet(req, res) {
   const { category, sectionName, oldSetName } = req.params;
   const newSetData = req.body;
@@ -336,9 +309,7 @@ async function updateSet(req, res) {
   }
 }
 
-/**
- * Update only the time limit of a set.
- */
+/** Update only the time limit of a set */
 async function updateSetTimeLimit(req, res) {
   const { category, sectionName, setName } = req.params;
   const { timeLimitMinutes } = req.body;
@@ -351,9 +322,7 @@ async function updateSetTimeLimit(req, res) {
   }
 }
 
-/**
- * Delete time limit from a set.
- */
+/** Delete time limit from a set */
 async function deleteSetTimeLimit(req, res) {
   const { category, sectionName, setName } = req.params;
   try {
@@ -365,9 +334,7 @@ async function deleteSetTimeLimit(req, res) {
   }
 }
 
-/**
- * Delete a set from a section.
- */
+/** Delete a set from a section */
 async function deleteSet(req, res) {
   const { category, sectionName, setName } = req.params;
   try {
@@ -380,9 +347,7 @@ async function deleteSet(req, res) {
 }
 
 // ======================= Additional Fetch Utilities ==========================
-/**
- * Fetch all categories, sections, and sets (structured data for exam papers).
- */
+/** Fetch all categories, sections, and sets (structured data for exam papers)*/
 async function fetchAllCategories(req, res) {
   try {
     const data = await questionServices.getAllCategoriesSectionsSets();
@@ -393,9 +358,7 @@ async function fetchAllCategories(req, res) {
   }
 }
 
-/**
- * Fetch sections for a specific category.
- */
+/** Fetch sections for a specific category */
 async function fetchSectionsByCategory(req, res) {
   const { category } = req.params;
   try {
@@ -408,9 +371,7 @@ async function fetchSectionsByCategory(req, res) {
   }
 }
 
-/**
- * Fetch sets for a specific category and section.
- */
+/** Fetch sets for a specific category and section */
 async function fetchSetsByCategorySection(req, res) {
   const { category, section } = req.params;
   try {
@@ -423,15 +384,9 @@ async function fetchSetsByCategorySection(req, res) {
   }
 }
 
-/**
- * Handles bulk upload of questions from an Excel file.
- * Expects an Excel file with specific column headers for question data.
- *
- * This function is updated to use the camelCase keys that `xlsx.utils.sheet_to_json`
- * typically produces from standard Excel column names (e.g., "Question Text" becomes "questionText").
- */
+/** Handles bulk upload of questions from an Excel file & Expects an Excel file with specific column headers for question data */
 async function bulkUploadQuestions(req, res) {
-  let filePath; // Declare filePath here to be accessible in finally block
+  let filePath;
   try {
     const { category, section, set } = req.body; // Get category, section, set from form fields
     const excelFile = req.files.find(file => file.fieldname === 'excelFile'); // Find the uploaded Excel file
@@ -443,25 +398,22 @@ async function bulkUploadQuestions(req, res) {
       return res.status(400).json({ message: 'Category, Section, and Set are required for bulk upload.' });
     }
 
-    filePath = path.join(__dirname, '..', excelFile.path); // Adjust path as needed
+    filePath = path.join(__dirname, '..', excelFile.path);
     const workbook = xlsx.readFile(filePath);
-    const sheetName = workbook.SheetNames[0]; // Assuming data is in the first sheet
+    const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    // Use header: 1 to get raw array of arrays, then manually map, or let sheet_to_json infer.
-    // Given the previous error log, sheet_to_json already converts to camelCase.
     const jsonData = xlsx.utils.sheet_to_json(worksheet);
 
     const questionsToSave = [];
 
     for (const row of jsonData) {
-      // --- Use the actual camelCase keys observed in the error log ---
       const questionText = row.questionText;
       const optionA = row.optionA;
       const optionB = row.optionB;
       const optionC = row.optionC;
       const optionD = row.optionD;
       const correctAnswer = row.correctAnswer?.toLowerCase();
-      const marks = Number(row.marks); // Retrieve marks from the Excel row and convert to number
+      const marks = Number(row.marks);
 
       // Skip row if essential data is missing or marks are invalid
       if (!questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer || isNaN(marks) || marks < 0) {
@@ -470,16 +422,13 @@ async function bulkUploadQuestions(req, res) {
       }
 
       // Default option type to 'text', can be extended for image/audio options from Excel
-      // Assuming 'Option A Type' etc. would also be camelCase if present in Excel
+      // Assuming 'Option A Type'
       const options = [
         { type: row.optionAType || 'text', content: optionA },
         { type: row.optionBType || 'text', content: optionB },
         { type: row.optionCType || 'text', content: optionC },
         { type: row.optionDType || 'text', content: optionD },
       ];
-
-      // If your Excel contains paths/URLs for images/audio, you'd assign them here.
-      // This assumes these are already accessible paths/URLs, not files to be uploaded with the excel.
       const questionImage = row.questionImage || null;
       const questionAudio = row.questionAudio || null;
 
@@ -492,14 +441,13 @@ async function bulkUploadQuestions(req, res) {
         questionAudio,
         options,
         correctAnswer,
-        marks, // Include marks in the question object
+        marks,
       });
     }
 
     if (questionsToSave.length === 0) {
       return res.status(400).json({ message: 'No valid questions found in the Excel file to process. Please ensure column headers match expected format (e.g., questionText, optionA, correctAnswer, marks) and data types are correct.' });
     }
-
     // Call the service layer to save questions
     const uploadedQuestions = await questionServices.bulkUploadQuestions(questionsToSave);
 
@@ -536,7 +484,7 @@ module.exports = {
   getQuestionById,
   deleteQuestionById,
   getQuestionsBySet,
-  bulkUploadQuestions, // <-- IMPORTANT: Add this to exports
+  bulkUploadQuestions,
 
   // Set Controllers
   getSets,

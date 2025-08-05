@@ -136,6 +136,5 @@ userSchema.statics.updateUserByMobile = async function (mobile, updateData) {
     throw new Error(`Failed to update user: ${error.message}`);
   }
 };
-
 const UserModel = mongoose.model('User', userSchema);
 module.exports = UserModel;

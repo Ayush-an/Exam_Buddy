@@ -15,8 +15,7 @@ const storage = multer.diskStorage({
   }
 });
 
-// Multer setup for handling various file uploads
-// '.any()' handles all files, including single question images/audio and the excel file.
+// Multer setup for handling various file uploads images/audio
 const upload = multer({ storage: storage }).any();
 
 // --- Existing routes ---
@@ -44,9 +43,7 @@ router.delete('/questions/:id', questionController.deleteQuestionById);
 router.get('/questions/:category/:section/:set', questionController.getQuestionsBySet);
 
 // NEW ROUTE FOR BULK EXCEL UPLOAD
-// This route will handle the Excel file upload. The 'upload' middleware will process the file.
-// The actual parsing and saving logic will be in the 'bulkUploadQuestions' controller function.
-router.post('/questions/bulk-upload', upload, questionController.bulkUploadQuestions); // Added this new route
+router.post('/questions/bulk-upload', upload, questionController.bulkUploadQuestions);
 
 // Set Routes
 router.get('/question-papers/:category/sections/:sectionName/sets', questionController.getSets);

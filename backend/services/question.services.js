@@ -14,17 +14,14 @@ const mongoose = require('mongoose');
  */
 async function createQuestion(questionData) {
   try {
-    const { category, section, set, marks } = questionData; // Destructure marks
-    const isValid = await validateSectionAndSet(category, section, set); // Use internal validation helper
+    const { category, section, set, marks } = questionData;
+    const isValid = await validateSectionAndSet(category, section, set);
     if (!isValid) {
       throw new Error(`Invalid section "${section}" or set "${set}" for category "${category}". Please ensure the set exists.`);
     }
-
-    // Additional validation for marks
     if (typeof marks !== 'number' || isNaN(marks) || marks < 0) {
       throw new Error('Marks must be a non-negative number.');
     }
-
     const question = new Question(questionData);
     return await question.save();
   } catch (error) {
@@ -260,21 +257,14 @@ async function addSet(category, sectionName, newSet) {
     if (section.sets.some(set => set.name === name)) {
       throw new Error('Set with this name already exists in the section.');
     }
-
-    // Ensure numberOfQuestions is valid before saving. This might be better handled in schema or separate validation.
-    // However, as per your original code, ensuring a minimum of 1 here.
-    // This loop is applying to all sections, which might be unintended if only one section is being targeted for sets.
-    // It's likely safer to ensure numberOfQuestions is correctly set during QuestionPaper creation or individual section updates.
-    // For now, retaining the original logic but noting the potential scope issue.
     paper.sections.forEach(sec => {
       if (sec.numberOfQuestions === undefined || sec.numberOfQuestions < 1) {
-        sec.numberOfQuestions = 1; // minimum allowed
+        sec.numberOfQuestions = 1;
       }
     });
-
     section.sets.push({ name, timeLimitMinutes });
-    await paper.save(); // Save the parent document to persist subdocument changes
-    return section.sets.toObject(); // Return a plain object array
+    await paper.save();
+    return section.sets.toObject();
   } catch (error) {
     console.error(`Error adding set to section "${sectionName}" in category "${category}":`, error);
     throw error;
@@ -307,12 +297,11 @@ async function updateSet(category, sectionName, oldSetName, newSetData) {
     }
 
     if (newSetName) set.name = newSetName;
-    // Check if timeLimitMinutes is explicitly provided (can be 0 or null)
     if (typeof timeLimitMinutes === 'number' || timeLimitMinutes === null) {
       set.timeLimitMinutes = timeLimitMinutes;
     }
     await paper.save();
-    return section.sets.toObject(); // Return a plain object array
+    return section.sets.toObject();
   } catch (error) {
     console.error(`Error updating set "${oldSetName}" in section "${sectionName}" of category "${category}":`, error);
     throw error;
@@ -341,7 +330,7 @@ async function updateSetTimeLimit(category, sectionName, setName, timeLimitMinut
 
     set.timeLimitMinutes = timeLimitMinutes;
     await paper.save();
-    return set.toObject(); // Return a plain object
+    return set.toObject();
   } catch (error) {
     console.error(`Error updating time limit of set "${setName}" in section "${sectionName}" of category "${category}":`, error);
     throw error;
@@ -367,9 +356,9 @@ async function deleteSetTimeLimit(category, sectionName, setName) {
     const set = section.sets.find(set => set.name === setName);
     if (!set) throw new Error('Set not found');
 
-    set.timeLimitMinutes = null; // Set timeLimit to null to "delete" it
+    set.timeLimitMinutes = null;
     await paper.save();
-    return set.toObject(); // Return a plain object
+    return set.toObject();
   } catch (error) {
     console.error(`Error deleting time limit of set "${setName}" in section "${sectionName}" of category "${category}":`, error);
     throw error;
@@ -393,15 +382,14 @@ async function deleteSet(category, sectionName, setName) {
     if (!section) throw new Error('Section not found');
 
     const initialLength = section.sets.length;
-    // Filter out the set to be deleted
     section.sets = section.sets.filter(set => set.name !== setName);
 
     if (section.sets.length === initialLength) {
-      throw new Error('Set not found or already deleted.'); // If length didn't change, set wasn't found
+      throw new Error('Set not found or already deleted.');
     }
 
     await paper.save();
-    return section.sets.toObject(); // Return a plain object array
+    return section.sets.toObject();
   } catch (error) {
     console.error(`Error deleting set "${setName}" from section "${sectionName}" of category "${category}":`, error);
     throw error;
@@ -411,8 +399,6 @@ async function deleteSet(category, sectionName, setName) {
 // ======================= Additional Fetch Utilities Services ==========================
 // Fetch all categories, sections, and sets (structured data for exam papers)
 async function getAllCategoriesSectionsSets() {
-  // This service function would likely need to retrieve specific fields
-  // or aggregate data from QuestionPaper model if you want a concise structure
   return QuestionPaper.find({}, 'category sections.name sections.sets.name sections.sets.timeLimitMinutes');
 }
 
@@ -439,23 +425,19 @@ async function bulkUploadQuestions(questions) {
   }
 
   // Optional: Add validation for each question object here before inserting
-  // For example, check if 'marks' is present and a valid number.
   for (const questionData of questions) {
     if (typeof questionData.marks !== 'number' || isNaN(questionData.marks) || questionData.marks < 0) {
       throw new Error(`Invalid marks value encountered during bulk upload: ${questionData.marks}`);
     }
-    // Add more validation as needed (e.g., presence of category, section, set, options)
     const isValid = await validateSectionAndSet(questionData.category, questionData.section, questionData.set);
     if (!isValid) {
       throw new Error(`Invalid section or set for category "${questionData.category}" during bulk upload for question: ${questionData.questionText}`);
     }
   }
-
   // Use insertMany for efficient bulk insertion
   const insertedQuestions = await Question.insertMany(questions);
   return insertedQuestions;
 }
-
 
 // --- Module Exports ---
 module.exports = {
@@ -479,7 +461,7 @@ module.exports = {
   getQuestionById,
   deleteQuestionById,
   getQuestionsBySet,
-  bulkUploadQuestions, // This line was corrected to remove the comma before it
+  bulkUploadQuestions,
 
   // Additional Fetcher Services
   getAllCategoriesSectionsSets,
