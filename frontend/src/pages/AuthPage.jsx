@@ -4,8 +4,8 @@ import UserSignIn from './UserSignIn';
 import UserSignUp from './UserSignUp';
 import AdminSignIn from './SignIn';
 import AdminSignUp from './SignUp';
-import { FaUserAstronaut, FaUserPlus, FaUserShield } from 'react-icons/fa';
-
+import { FaUserAstronaut, FaUserPlus} from 'react-icons/fa';
+//const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
 export default function AuthPage() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [authType, setAuthType] = useState('user'); // 'user' or 'admin'

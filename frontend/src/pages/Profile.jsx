@@ -2,31 +2,16 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 
-const SERVER_BASE_URL = 'http://localhost:3000';
+const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
   const [profileImage, setProfileImage] = useState('');
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    mobile: '',
-    email: '',
-    dob: '',
-    parentWhatsapp: '',
+    firstName: '', lastName: '', mobile: '', email: '', dob: '', parentWhatsapp: '',
   });
   //const [score, setScore] = useState(0);
   const [papersAttempted, setPapersAttempted] = useState(0);

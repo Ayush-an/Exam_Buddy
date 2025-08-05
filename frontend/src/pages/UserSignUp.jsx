@@ -5,15 +5,7 @@ import { useNavigate } from 'react-router-dom';
 export default function UserSignUp() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    mobile: '',
-    parentMobile: '',
-    whatsapp: '',
-    email: '',
-    dob: '',
-    password: '',
-    confirmPassword: ''
+    firstName: '', lastName: '', mobile: '', parentMobile: '', whatsapp: '', email: '', dob: '', password: '', confirmPassword: ''
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -66,7 +58,7 @@ export default function UserSignUp() {
 
     try {
       const { confirmPassword, ...userData } = form;
-      await axios.post('http://localhost:3000/api/user/register', userData);
+await axios.post(`${process.env.REACT_APP_API_URL}/api/user/register`, userData);
       alert('✅ Registration successful! Please sign in.');
       navigate('/user-signin');
     } catch (err) {
@@ -99,71 +91,40 @@ export default function UserSignUp() {
           <div>
             <label htmlFor="firstName" className="block mb-1 text-sm font-medium text-gray-700">First Name</label>
             <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              value={form.firstName}
-              onChange={handleChange}
-              autoComplete="given-name"
+              type="text" id="firstName" name="firstName" value={form.firstName} onChange={handleChange} autoComplete="given-name"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="First Name"
-              required
+              placeholder="First Name" required
             />
           </div>
           <div>
             <label htmlFor="lastName" className="block mb-1 text-sm font-medium text-gray-700">Last Name</label>
             <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              value={form.lastName}
-              onChange={handleChange}
-              autoComplete="family-name"
+              type="text" id="lastName" name="lastName" value={form.lastName} onChange={handleChange} autoComplete="family-name"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Last Name"
-              required
+              placeholder="Last Name" required
             />
           </div>
           <div>
             <label htmlFor="mobile" className="block mb-1 text-sm font-medium text-gray-700">Mobile Number</label>
             <input
-              type="tel"
-              id="mobile"
-              name="mobile"
-              value={form.mobile}
-              onChange={handleChange}
-              pattern="[6-9]{1}[0-9]{9}"
-              maxLength={10}
-              inputMode="numeric"
-              autoComplete="tel"
+              type="tel" id="mobile" name="mobile" value={form.mobile} onChange={handleChange} pattern="[6-9]{1}[0-9]{9}"
+              maxLength={10} inputMode="numeric" autoComplete="tel"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., 9876543210"
-              required
+              placeholder="e.g., 9876543210" required
             />
           </div>
           <div>
             <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">Email</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              autoComplete="email"
+              type="email" id="email" name="email" value={form.email} onChange={handleChange} autoComplete="email"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="abc@example.com"
-              required
+              placeholder="abc@example.com" required
             />
           </div>
           <div>
             <label htmlFor="dob" className="block mb-1 text-sm font-medium text-gray-700">Date of Birth</label>
             <input
-              type="date"
-              id="dob"
-              name="dob"
-              value={form.dob}
-              onChange={handleChange}
-              max={maxDOB}
+              type="date" id="dob" name="dob" value={form.dob} onChange={handleChange} max={maxDOB}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               required
             />
@@ -171,14 +132,8 @@ export default function UserSignUp() {
           <div>
             <label htmlFor="parentMobile" className="block mb-1 text-sm font-medium text-gray-700">Parent Mobile (Optional)</label>
             <input
-              type="tel"
-              id="parentMobile"
-              name="parentMobile"
-              value={form.parentMobile}
-              onChange={handleChange}
-              pattern="[6-9]{1}[0-9]{9}"
-              maxLength={10}
-              inputMode="numeric"
+              type="tel" id="parentMobile" name="parentMobile" value={form.parentMobile} onChange={handleChange} pattern="[6-9]{1}[0-9]{9}"
+              maxLength={10} inputMode="numeric"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., 9876543210"
             />
@@ -186,53 +141,31 @@ export default function UserSignUp() {
           <div>
             <label htmlFor="whatsapp" className="block mb-1 text-sm font-medium text-gray-700">WhatsApp (Optional)</label>
             <input
-              type="tel"
-              id="whatsapp"
-              name="whatsapp"
-              value={form.whatsapp}
-              onChange={handleChange}
-              pattern="[6-9]{1}[0-9]{9}"
-              maxLength={10}
-              inputMode="numeric"
-              autoComplete="tel"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., 9876543210"
+              type="tel" id="whatsapp" name="whatsapp" value={form.whatsapp} onChange={handleChange} pattern="[6-9]{1}[0-9]{9}" maxLength={10}
+              inputMode="numeric" autoComplete="tel" 
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 9876543210"
             />
           </div>
           <div>
             <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="new-password"
-              minLength={6}
+            <input 
+              type="password" id="password" name="password" value={form.password} onChange={handleChange} autoComplete="new-password" minLength={6}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="********"
-              required
+              placeholder="********" required
             />
           </div>
           <div>
             <label htmlFor="confirmPassword" className="block mb-1 text-sm font-medium text-gray-700">Confirm Password</label>
             <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              autoComplete="new-password"
+              type="password" id="confirmPassword" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} autoComplete="new-password"
               minLength={6}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="********"
-              required
+              placeholder="********" required
             />
           </div>
         </div>
 
-        <button
-          type="submit"
+        <button type="submit"
           className="w-full px-4 py-3 font-semibold text-white transition duration-300 ease-in-out bg-indigo-600 rounded-md shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           disabled={loading}
         >
@@ -241,9 +174,7 @@ export default function UserSignUp() {
 
         <p className="mt-4 text-sm text-center text-gray-600">
           Already have an account?{' '}
-          <button
-            type="button"
-            onClick={() => navigate('/auth')}
+          <button type="button" onClick={() => navigate('/auth')}
             className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none"
           >
             Sign In

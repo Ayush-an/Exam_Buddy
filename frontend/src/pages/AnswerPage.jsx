@@ -11,7 +11,9 @@ import 'react-toastify/dist/ReactToastify.css'; import animationData from './ass
 import examLogo from './assets/exam-buddy-logo.PNG'; import welcomeBannerImage from './assets/Backround.png';
 import BeginnerImage from './assets/first.png'; import IntermediateImage from './assets/second.png';
 import AdvancedImage from './assets/third.png'; import ProAdvancedImage from './assets/fourth.png';
-const SERVER_BASE_URL = 'http://localhost:3000';
+
+const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
+
 const API = axios.create({ baseURL: `${SERVER_BASE_URL}/api`, });
 export default function AnswerPage() {
     const navigate = useNavigate();
@@ -213,7 +215,7 @@ export default function AnswerPage() {
         setAvailableSets([]);
         clearInterval(timerIntervalRef.current);
         setTimeLeft(0);
-        setStartTime(null); //setCorrectAnswersCount(0);
+        setStartTime(null);
         // Ensure sidebar is open when resetting flow to dashboard
         setIsSidebarOpen(true);
     }; // --- UPDATED: MediaDisplay Component to use Server Base URL ---

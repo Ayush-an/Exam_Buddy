@@ -16,12 +16,7 @@ const Question = () => {
   const [isUploadingExcel, setIsUploadingExcel] = useState(false);
 
   const [form, setForm] = useState({
-    category: '',
-    section: '',
-    set: '',
-    questionText: '',
-    questionImage: null,
-    questionAudio: null,
+    category: '', section: '', set: '', questionText: '', questionImage: null, questionAudio: null,
     options: [
       { type: 'text', content: '' },
       { type: 'text', content: '' },
@@ -37,7 +32,9 @@ const Question = () => {
 
   const fetchSets = useCallback(async (category, section) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/question-papers/${category}/sections/${section}/sets`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/question-papers/${category}/sections/${section}/sets`);
+
+
       setSets(res.data);
 
       if (form.set && !res.data.some(s => s.name === form.set)) {
@@ -102,7 +99,8 @@ const Question = () => {
         payload.timeLimitMinutes = Number(setTimeLimit);
       }
       // API call to add the new set
-      await axios.post(`http://localhost:3000/api/question-papers/${form.category}/sections/${form.section}/sets`, payload);
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/question-papers/${form.category}/sections/${form.section}/sets`, payload);
+
       alert('✅ Set created successfully');
       setCreateNewSet(false);
       setForm(prev => ({ ...prev, set: newSetName.trim() }));
@@ -125,9 +123,10 @@ const Question = () => {
     }
     try {
       await axios.patch(
-        `http://localhost:3000/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`,
-        { timeLimitMinutes: Number(setTimeLimit) }
-      );
+  `${process.env.REACT_APP_API_URL}/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`,
+  { timeLimitMinutes: Number(setTimeLimit) }
+);
+
       alert('✅ Time limit updated');
       fetchSets(form.category, form.section);
     } catch (err) {
@@ -147,8 +146,9 @@ const Question = () => {
     try {
       // API call to delete the time limit for the selected set
       await axios.delete(
-        `http://localhost:3000/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`
-      );
+  `${process.env.REACT_APP_API_URL}/api/question-papers/${form.category}/sections/${form.section}/sets/${form.set}/time-limit`
+);
+
       alert('✅ Time limit deleted');
       setSetTimeLimit('');
       fetchSets(form.category, form.section);
@@ -288,9 +288,10 @@ const Question = () => {
 
     try {
       // API call to create the question
-      await axios.post('http://localhost:3000/api/questions/create', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/questions/create`, formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+
 
       alert('✅ Question created successfully!');
       // Reset form fields after successful submission
@@ -350,9 +351,10 @@ const Question = () => {
     excelFormData.append('set', form.set);
 
     try {
-      await axios.post('http://localhost:3000/api/questions/bulk-upload', excelFormData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/questions/bulk-upload`, excelFormData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+
       alert('✅ Excel file uploaded successfully! Questions will be processed.');
       setExcelFile(null);
     } catch (err) {

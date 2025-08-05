@@ -10,8 +10,8 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/admin/signup', {
-        username: form.username,
+await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/signup`, {
+          username: form.username,
         password: form.password,
         role: form.role
       });

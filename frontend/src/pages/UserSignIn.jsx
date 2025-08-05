@@ -28,7 +28,8 @@ export default function UserSignIn() {
     }
 
     try {
-      const res = await axios.post('http://localhost:3000/api/user/login', form);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/login`, form);
+
       const { user, token } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('token', token);

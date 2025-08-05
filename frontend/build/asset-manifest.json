@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/static/css/main.37eda587.css",
+    "main.js": "/static/js/main.46904180.js",
+    "static/js/453.d855a71b.chunk.js": "/static/js/453.d855a71b.chunk.js",
+    "static/media/second.png": "/static/media/second.516da02cf4cc36762cf7.png",
+    "static/media/third.png": "/static/media/third.719512a02cf162046362.png",
+    "static/media/first.png": "/static/media/first.82ad991dfe29228550b2.png",
+    "static/media/Backround.png": "/static/media/Backround.084284c1a25d9b847e1f.png",
+    "static/media/exam-buddy-logo.PNG": "/static/media/exam-buddy-logo.587fadd1bc59f98b85be.PNG",
+    "static/media/fourth.png": "/static/media/fourth.010cdb651b5887236012.png",
+    "index.html": "/index.html",
+    "main.37eda587.css.map": "/static/css/main.37eda587.css.map",
+    "main.46904180.js.map": "/static/js/main.46904180.js.map",
+    "453.d855a71b.chunk.js.map": "/static/js/453.d855a71b.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.37eda587.css",
+    "static/js/main.46904180.js"
+  ]
+}

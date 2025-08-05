@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 
 const MediaDisplay = ({ src, type, alt, className }) => {
     if (!src) return null;
-    const fullSrc = `http://localhost:3000/${src}`;
+    const fullSrc = `${process.env.REACT_APP_API_URL}/${src}`;
     const handleError = (e) => {
         e.target.onerror = null;
         e.target.style.display = 'none';
@@ -40,7 +40,8 @@ export default function ViewAnswer() {
 
             try {
                 setLoading(true);
-                const res = await axios.get(`http://localhost:3000/api/user/exam-review/${userId}/${examAttemptId}`);
+                const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/user/exam-review/${userId}/${examAttemptId}`);
+
                 if (res.data?.status && res.data.review) {
                     setReviewData(res.data.review);
                 } else {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
 export default function PaperSetPage() {
   const [questionPapers, setQuestionPapers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,9 @@ export default function PaperSetPage() {
       try {
         setLoading(true);
         // This endpoint returns all categories, sections, and sets
-        const res = await axios.get('http://localhost:3000/api/question-papers');
+       // const res = await axios.get('http://localhost:3000/api/question-papers');
+        const res = await axios.get(`${SERVER_BASE_URL}/api/question-papers`);
+
         setQuestionPapers(res.data);
       } catch (err) {
         console.error('Error fetching question papers:', err.response ? err.response.data : err);
@@ -35,7 +37,7 @@ export default function PaperSetPage() {
       setError(null);
       setCurrentSetInfo({ category, sectionName, setName });
 
-      const res = await axios.get(`http://localhost:3000/api/questions/${category}/${sectionName}/${setName}`);
+      const res = await axios.get(`${SERVER_BASE_URL}/api/questions/${category}/${sectionName}/${setName}`);
       setSelectedSetQuestions(res.data);
       setIsModalOpen(true);
     } catch (err) {
@@ -155,10 +157,10 @@ export default function PaperSetPage() {
                   <div key={question._id || qIndex} className="p-4 border border-gray-200 rounded-md bg-gray-50">
                     <p className="mb-2 text-lg font-semibold">Q{qIndex + 1}: {question.questionText}</p>
                     {question.questionImage && (
-                      <img src={`http://localhost:3000/${question.questionImage}`} alt="Question visual" className="h-auto max-w-full mb-2 rounded-md" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/300x200/cccccc/000000?text=Image+Not+Found"; }}/>
+                      <img src={`${SERVER_BASE_URL}/${question.questionImage}`} alt="Question visual" className="h-auto max-w-full mb-2 rounded-md" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/300x200/cccccc/000000?text=Image+Not+Found"; }}/>
                     )}
                     {question.questionAudio && (
-                      <audio controls src={`http://localhost:3000/${question.questionAudio}`} className="w-full mb-2">
+                      <audio controls src={`${SERVER_BASE_URL}/${question.questionAudio}`} className="w-full mb-2">
                         Your browser does not support the audio element.
                       </audio>
                     )}
@@ -168,10 +170,10 @@ export default function PaperSetPage() {
                           <span className="font-bold">{String.fromCharCode(65 + oIndex)}.</span>{' '}
                           {option.type === 'text' && <span>{option.content}</span>}
                           {option.type === 'image' && (
-                            <img src={`http://localhost:3000/${option.content}`} alt={`Option ${String.fromCharCode(65 + oIndex)}`} className="inline-block max-w-[100px] max-h-[100px] rounded" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/100x100/cccccc/000000?text=Option+Image"; }}/>
+                            <img src={`${SERVER_BASE_URL}/${option.content}`} alt={`Option ${String.fromCharCode(65 + oIndex)}`} className="inline-block max-w-[100px] max-h-[100px] rounded" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/100x100/cccccc/000000?text=Option+Image"; }}/>
                           )}
                           {option.type === 'audio' && (
-                            <audio controls src={`http://localhost:3000/${option.content}`} className="inline-block w-3/4">
+                            <audio controls src={`${SERVER_BASE_URL}/${option.content}`} className="inline-block w-3/4">
                               Your browser does not support the audio element.
                             </audio>
                           )}
