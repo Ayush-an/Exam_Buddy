@@ -29,7 +29,6 @@ export default function UserSignIn() {
 
     try {
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/login`, form);
-
       const { user, token } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('token', token);
@@ -56,14 +55,10 @@ export default function UserSignIn() {
             Mobile Number
           </label>
           <input
-            type="tel"
-            id="mobile"
-            name="mobile"
-            value={form.mobile}
+            type="tel" id="mobile" name="mobile"  value={form.mobile}
             onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-            placeholder="Your mobile number"
-            required
+            placeholder="Your mobile number" required
             disabled={loading}
           />
         </div>
@@ -73,10 +68,7 @@ export default function UserSignIn() {
             Password
           </label>
           <input
-            type="password"
-            id="password"
-            name="password"
-            value={form.password}
+            type="password" id="password" name="password" value={form.password}
             onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
             placeholder="********"
