@@ -30,7 +30,7 @@ export default function UserSignIn() {
     }
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/user/login`, form);
+      const res = await axios.post(`${API_BASE_URL}/api/api/user/login`, form);
       const { user, token } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('token', token);

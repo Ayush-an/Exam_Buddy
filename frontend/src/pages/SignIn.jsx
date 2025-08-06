@@ -13,7 +13,7 @@ export default function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/admin/signin`, form);
+      const res = await axios.post(`${API_BASE_URL}/api/api/admin/signin`, form);
       const admin = res.data.admin;
       localStorage.setItem('admin', JSON.stringify(admin));
       
