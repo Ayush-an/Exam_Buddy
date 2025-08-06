@@ -87,12 +87,8 @@ export default function UserSignIn() {
         </button>
 
         <p className="mt-4 text-sm text-center text-gray-600">
-          New user?{' '}
-          <button type="button" onClick={() => navigate('/user-signup')}
-            className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none" disabled={loading}
-          >
-            Sign Up
-          </button>
+          New user? <t className="font-medium text-blue-600">Then Sign Up</t>{' '}
+          
         </p>
       </form>
     </div>

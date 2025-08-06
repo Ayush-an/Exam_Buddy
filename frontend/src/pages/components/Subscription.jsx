@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
-
+import Navbar from './Navbar';
 const Subscription = () => {
   const [unlockedPlan, setUnlockedPlan] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -69,6 +69,8 @@ const Subscription = () => {
   ];
 
   return (
+    <div>
+      <Navbar />
     <div className="relative max-w-6xl px-4 py-12 mx-auto">
       {showConfetti && (
         <Confetti
@@ -131,6 +133,7 @@ const Subscription = () => {
           </motion.div>
         ))}
       </div>
+    </div>
     </div>
   );
 };

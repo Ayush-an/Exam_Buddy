@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Navbar from './Navbar';
 
 const faqs = [
   {
@@ -35,6 +36,8 @@ const Support = () => {
   };
 
   return (
+    <div>
+      <Navbar />
     <div className="bg-gradient-to-br from-purple-200 to-purple-400">
     <div className="max-w-4xl p-6 mx-auto">
       <h1 className="mb-6 text-3xl font-bold">Support</h1>
@@ -103,6 +106,7 @@ const Support = () => {
       <div className="text-center text-gray-500">
         <p>💬 Live Chat Support — Coming Soon!</p>
       </div>
+    </div>
     </div>
     </div>
   );

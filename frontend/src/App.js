@@ -1,4 +1,5 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,13 +11,14 @@ import Question from './pages/Question.jsx';
 import PaperSetPage from './pages/PaperSetPage.jsx';
 import AnswerPage from './pages/AnswerPage.jsx';
 import ViewAnswer from './pages/ViewAnswer.jsx';
-//import Welcome from './pages/wellcome.jsx';  <Route path="/welcome" element={<Welcome />} /> {/* This route is redundant if "/" already points to Welcome */}
 
 import Profile from './pages/Profile.jsx';
 import Settings from './pages/components/Settings.jsx';
 import Support from './pages/components/Support.jsx';
 import Subscription from './pages/components/Subscription.jsx';
 import AuthPage from './pages/AuthPage.jsx';
+import Navbar from './pages/components/Navbar.jsx';
+
 function App() {
   return (
     <Router>
@@ -37,8 +39,7 @@ function App() {
 
       <Routes>
         {/* Default route */}
-        <Route path="/" element={<AuthPage />} />
-       
+<Route path="/" element={<Navigate to="/auth" />} />       
         {/* Admin routes */}
         <Route path="/admin-signin" element={<SignIn />} />
         <Route path="/admin-signup" element={<SignUp />} />
@@ -57,6 +58,7 @@ function App() {
         <Route path="/support" element={<Support />} />
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/navbar" element={<Navbar />} />
       </Routes>
     </Router>
   );

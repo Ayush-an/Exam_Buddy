@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 export default function SignIn() {
+  
   const [form, setForm] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
@@ -69,12 +70,8 @@ export default function SignIn() {
 
         {/* Link to Sign Up Page */}
         <p className="text-sm text-center text-gray-600">
-          Don't have an account? {' '}
-          <button type="button" onClick={handleSignUpClick}
-            className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none"
-          >
-            Sign Up
-          </button>
+          Don't have an account? <t className="font-medium text-blue-600"> Then Sign Up</t>{' '} {' '}
+          
         </p>
       </form>
     </div>

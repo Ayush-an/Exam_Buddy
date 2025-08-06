@@ -339,9 +339,9 @@ export default function AnswerPage() {
                 <p>Total Questions: <span className="font-bold">{examResult.totalQuestions}</span></p> <p>Time Taken: <span className="font-bold">{formatTime(examResult.timeTaken)}</span></p>
                 {examResult.timeUp && <p className="font-semibold text-red-500">Time ran out!</p>} {examResult.examAttemptId ? (<Link to={`/view-answer/${user?._id}/${examResult.examAttemptId}`}>
                     <button className="w-full px-4 py-2 mt-4 font-medium text-white transition duration-150 ease-in-out bg-purple-600 rounded-md hover:bg-purple-700">
-                        View Answers </button> </Link>  ) : ( <p className="text-sm text-red-500">Attempt ID missing, cannot view answers.</p>)} </div> )}
+                        View Answers </button> </Link> ) : ( <p className="text-sm text-red-500">Attempt ID missing, cannot view answers.</p>)} </div> )}
             <button onClick={resetExamFlow} className="w-full px-4 py-3 mt-4 font-medium text-gray-800 bg-gray-300 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Start New Exam </button> </motion.div>);
-    const handleLogout = () => { localStorage.removeItem('user'); localStorage.removeItem('token'); navigate('/user-signin'); toast.info('You have been logged out.'); };
+    const handleLogout = () => { localStorage.removeItem('user'); localStorage.removeItem('token'); navigate('/auth'); toast.info('You have been logged out.'); };
     const toggleDarkMode = () => setDarkMode(prevMode => !prevMode);
     return (
         <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>  {/* ... rest of the main return statement (loading overlay, sidebar, main content) ... */}
@@ -378,8 +378,10 @@ export default function AnswerPage() {
                                 <FaLifeRing className="w-5 h-5 mr-3" /> Support </Link>  </nav> </div> <div className="flex items-center justify-center h-40">
                             <Lottie animationData={animationData} loop={true} autoplay={true} style={{ width: '100%', maxWidth: '180px', height: 'auto' }} /> </div>
                         <div className="pt-4 mt-auto border-t border-gray-200 dark:border-gray-700">
+                            
                             <button onClick={handleLogout} className="flex items-center justify-center w-full p-3 text-red-600 transition-colors duration-200 border border-red-600 rounded-full hover:bg-red-50 dark:hover:bg-red-900 dark:text-red-300 dark:border-red-300">
                                 <FaPowerOff className="w-5 h-5 mr-2" /> Logout </button>
+                            
                             <button onClick={toggleDarkMode} className="flex items-center justify-center w-full p-3 mt-2 text-gray-700 transition-colors duration-200 border border-gray-300 rounded-full hover:bg-gray-100 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
                                 {darkMode ? <FaToggleOn className="w-5 h-5 mr-2" /> : <FaToggleOff className="w-5 h-5 mr-2" />}  {darkMode ? 'Light Mode' : 'Dark Mode'}</button> </div></motion.div>
                 ) : null}
