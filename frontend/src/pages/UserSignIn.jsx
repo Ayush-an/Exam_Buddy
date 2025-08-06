@@ -1,10 +1,10 @@
+// UserSignIn.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 const API_BASE_URL = process.env.REACT_APP_API_URL;
-
 
 export default function UserSignIn() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function UserSignIn() {
     }
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/api/user/login`, form);
+      const res = await axios.post(`${API_BASE_URL}/api/user/login`, form);
       const { user, token } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('token', token);
@@ -56,13 +56,10 @@ export default function UserSignIn() {
           <label htmlFor="mobile" className="block mb-1 text-sm font-medium text-gray-700">
             Mobile Number
           </label>
-          <input
-            type="tel" id="mobile" name="mobile"  value={form.mobile}
+          <input type="tel" id="mobile" name="mobile"  value={form.mobile}
             onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-            placeholder="Your mobile number"
-            required
-            disabled={loading}
+            placeholder="Your mobile number" required disabled={loading}
           />
         </div>
 
@@ -70,20 +67,12 @@ export default function UserSignIn() {
           <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">
             Password
           </label>
-          <input
-            type="password"
-            id="password" name="password"
-            value={form.password}
-            onChange={handleChange}
+          <input type="password" id="password" name="password" value={form.password} onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-            placeholder="********"
-            required
-            disabled={loading}
-          />
+            placeholder="********" required disabled={loading} />
         </div>
 
-        <button
-          type="submit"
+        <button type="submit"
           className={`w-full px-4 py-3 font-semibold text-white transition duration-300 ease-in-out bg-purple-600 rounded-md shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           disabled={loading}
         >
@@ -99,11 +88,8 @@ export default function UserSignIn() {
 
         <p className="mt-4 text-sm text-center text-gray-600">
           New user?{' '}
-          <button
-            type="button"
-            onClick={() => navigate('/user-signup')}
-            className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none"
-            disabled={loading}
+          <button type="button" onClick={() => navigate('/user-signup')}
+            className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none" disabled={loading}
           >
             Sign Up
           </button>

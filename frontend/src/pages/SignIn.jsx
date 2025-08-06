@@ -4,8 +4,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
-
-
 export default function SignIn() {
   const [form, setForm] = useState({ username: '', password: '' });
   const navigate = useNavigate();
@@ -13,7 +11,7 @@ export default function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/api/admin/signin`, form);
+      const res = await axios.post(`${API_BASE_URL}/api/admin/signin`, form);
       const admin = res.data.admin;
       localStorage.setItem('admin', JSON.stringify(admin));
       
@@ -46,33 +44,24 @@ export default function SignIn() {
         {/* Username Input - Corrected to 'username' */}
         <div>
           <label htmlFor="username" className="block mb-1 text-sm font-medium text-gray-700">Username</label>
-          <input
-            id="username"
+          <input id="username"
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Username"
-            value={form.username}
-            onChange={e => setForm({ ...form, username: e.target.value })}
-            required
+            placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required
           />
         </div>
         
         {/* Password Input */}
         <div>
           <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">Password</label>
-          <input
-            id="password"
+          <input id="password"
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={e => setForm({ ...form, password: e.target.value })}
-            required
+            type="password" placeholder="Password" value={form.password}
+            onChange={e => setForm({ ...form, password: e.target.value })} required
           />
         </div>
         
         {/* Sign In Button */}
-        <button
-          type="submit"
+        <button type="submit"
           className="w-full px-4 py-3 font-semibold text-white transition duration-150 ease-in-out bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           Sign In
@@ -81,9 +70,7 @@ export default function SignIn() {
         {/* Link to Sign Up Page */}
         <p className="text-sm text-center text-gray-600">
           Don't have an account? {' '}
-          <button
-            type="button"
-            onClick={handleSignUpClick}
+          <button type="button" onClick={handleSignUpClick}
             className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none"
           >
             Sign Up
