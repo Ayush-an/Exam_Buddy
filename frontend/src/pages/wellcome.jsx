@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaUserShield } from 'react-icons/fa';
-import logo from './assets/exam-buddy-logo.PNG';
+import logo from './assets/exam-buddy-logo.PNG'; // Adjust the path as necessary
 
 export default function Welcome() {
   const navigate = useNavigate();

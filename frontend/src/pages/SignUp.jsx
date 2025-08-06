@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+
 
 export default function SignUp() {
   const [form, setForm] = useState({ username: '', password: '', role: 'question-paper-setter' });
@@ -10,8 +12,8 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-await axios.post(`${process.env.REACT_APP_API_URL}/admin/signup`, {
-          username: form.username,
+      await axios.post(`${API_BASE_URL}/api/admin/signup`, {
+        username: form.username,
         password: form.password,
         role: form.role
       });

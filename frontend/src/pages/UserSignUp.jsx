@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export default function UserSignUp() {
   const navigate = useNavigate();
@@ -56,9 +57,10 @@ export default function UserSignUp() {
       return;
     }
 
+    //`${API_BASE_URL}
     try {
       const { confirmPassword, ...userData } = form;
-await axios.post(`${process.env.REACT_APP_API_URL}/user/register`, userData);
+      await axios.post(`${API_BASE_URL}/api/user/register`, userData);
       alert('✅ Registration successful! Please sign in.');
       navigate('/user-signin');
     } catch (err) {
@@ -91,7 +93,10 @@ await axios.post(`${process.env.REACT_APP_API_URL}/user/register`, userData);
           <div>
             <label htmlFor="firstName" className="block mb-1 text-sm font-medium text-gray-700">First Name</label>
             <input
-              type="text" id="firstName" name="firstName" value={form.firstName} onChange={handleChange} autoComplete="given-name"
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={form.firstName} onChange={handleChange} autoComplete="given-name"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="First Name" required
             />
@@ -165,7 +170,8 @@ await axios.post(`${process.env.REACT_APP_API_URL}/user/register`, userData);
           </div>
         </div>
 
-        <button type="submit"
+        <button
+          type="submit"
           className="w-full px-4 py-3 font-semibold text-white transition duration-300 ease-in-out bg-indigo-600 rounded-md shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           disabled={loading}
         >
@@ -174,7 +180,9 @@ await axios.post(`${process.env.REACT_APP_API_URL}/user/register`, userData);
 
         <p className="mt-4 text-sm text-center text-gray-600">
           Already have an account?{' '}
-          <button type="button" onClick={() => navigate('/auth')}
+          <button
+            type="button"
+            onClick={() => navigate('/auth')}
             className="font-medium text-blue-600 underline hover:text-blue-800 focus:outline-none"
           >
             Sign In

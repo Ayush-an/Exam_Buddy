@@ -12,9 +12,10 @@ import examLogo from './assets/exam-buddy-logo.PNG'; import welcomeBannerImage f
 import BeginnerImage from './assets/first.png'; import IntermediateImage from './assets/second.png';
 import AdvancedImage from './assets/third.png'; import ProAdvancedImage from './assets/fourth.png';
 
-const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
-const API = axios.create({ baseURL: `${SERVER_BASE_URL}`, });
+//const SERVER_BASE_URL = process.env.REACT_APP_API_URL;
+const API = axios.create({ baseURL: `${API_BASE_URL}/api`, });
 export default function AnswerPage() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -87,7 +88,7 @@ export default function AnswerPage() {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             if (res.data.status && res.data.profileImage) {
-                setProfileImage(`${SERVER_BASE_URL}${res.data.profileImage}`);
+                setProfileImage(`${API_BASE_URL}${res.data.profileImage}`);
             }
         } catch (err) {
             console.error('Could not fetch profile image:', err);
@@ -215,14 +216,14 @@ export default function AnswerPage() {
         setAvailableSets([]);
         clearInterval(timerIntervalRef.current);
         setTimeLeft(0);
-        setStartTime(null);
+        setStartTime(null); //setCorrectAnswersCount(0);
         // Ensure sidebar is open when resetting flow to dashboard
         setIsSidebarOpen(true);
     }; // --- UPDATED: MediaDisplay Component to use Server Base URL ---
     const MediaDisplay = ({ src, type, alt, className }) => {
         if (!src) return null;
         // If src is a relative path (starts with /), prepend server URL. Otherwise, use as is.
-        const fullSrc = src.startsWith('http') ? src : `${SERVER_BASE_URL}${src}`; const handleError = (e) => {
+        const fullSrc = src.startsWith('http') ? src : `${API_BASE_URL}${src}`; const handleError = (e) => {
             e.target.onerror = null; e.target.style.display = 'none';
         };
         if (type === 'image') { return <img src={fullSrc} alt={alt} className={className} onError={handleError} />; }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Fullscreen, Star } from 'lucide-react';
+import { CheckCircle, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
 
@@ -134,5 +134,4 @@ const Subscription = () => {
     </div>
   );
 };
-
 export default Subscription;

@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,} from 'recharts';
 
-const SERVER_BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+//const SERVER_BASE_URL = 'http://localhost:3000';
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
   const [profileImage, setProfileImage] = useState('');
   const [formData, setFormData] = useState({
-    firstName: '', lastName: '', mobile: '', email: '', dob: '', parentWhatsapp: '',
+    firstName: '',
+    lastName: '',
+    mobile: '',
+    email: '',
+    dob: '',
+    parentWhatsapp: '',
   });
   //const [score, setScore] = useState(0);
   const [papersAttempted, setPapersAttempted] = useState(0);
@@ -31,7 +35,7 @@ const Profile = () => {
 
   const fetchUserProfile = async (userId) => {
     try {
-      const res = await axios.get(`${SERVER_BASE_URL}/user/users/${userId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/user/users/${userId}`);
       if (res.data.status) {
         const user = res.data.user;
         setUserData(user);
@@ -45,7 +49,7 @@ const Profile = () => {
           parentWhatsapp: user.parentWhatsapp || user.whatsapp || '',
         });
         if (user.profileImage) {
-          setProfileImage(`${SERVER_BASE_URL}${user.profileImage}`);
+          setProfileImage(`${API_BASE_URL}${user.profileImage}`);
         }
       }
     } catch (error) {
@@ -55,7 +59,7 @@ const Profile = () => {
 
   const fetchExamHistory = async (userId) => {
     try {
-      const res = await axios.get(`${SERVER_BASE_URL}/user/exam-history/${userId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/user/exam-history/${userId}`);
       if (res.data.status) {
         const history = res.data.history || [];
         setPapersAttempted(history.length);
@@ -73,7 +77,7 @@ const Profile = () => {
 
   const handleUpdate = async () => {
     try {
-      const res = await axios.patch(`${SERVER_BASE_URL}/user/users/${userData._id}`, formData);
+      const res = await axios.patch(`${API_BASE_URL}/api/user/users/${userData._id}`, formData);
       if (res.data.status) {
         alert('Profile updated successfully!');
         localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -94,14 +98,14 @@ const Profile = () => {
 
     try {
       const res = await axios.post(
-        `${SERVER_BASE_URL}/user/users/${userData._id}/profile-image`,
+        `${API_BASE_URL}/api/user/users/${userData._id}/profile-image`,
         form,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
         }
       );
       if (res.data.status) {
-        setProfileImage(`${SERVER_BASE_URL}${res.data.imagePath}`);
+        setProfileImage(`${API_BASE_URL}${res.data.imagePath}`);
         alert('Profile image uploaded successfully!');
       }
     } catch (err) {
@@ -115,7 +119,7 @@ const Profile = () => {
 
     try {
       const res = await axios.delete(
-        `${SERVER_BASE_URL}/user/users/${userData._id}/profile-image`
+        `${API_BASE_URL}/api/user/users/${userData._id}/profile-image`
       );
       if (res.data.status) {
         setProfileImage('');

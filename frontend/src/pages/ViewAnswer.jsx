@@ -1,10 +1,12 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 const MediaDisplay = ({ src, type, alt, className }) => {
     if (!src) return null;
-    const fullSrc = `${process.env.REACT_APP_API_URL}/${src}`;
+   const fullSrc = `${API_BASE_URL}/${src}`;
     const handleError = (e) => {
         e.target.onerror = null;
         e.target.style.display = 'none';
@@ -40,8 +42,7 @@ export default function ViewAnswer() {
 
             try {
                 setLoading(true);
-                const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/user/exam-review/${userId}/${examAttemptId}`);
-
+                const res = await axios.get(`${API_BASE_URL}/api/user/exam-review/${userId}/${examAttemptId}`);
                 if (res.data?.status && res.data.review) {
                     setReviewData(res.data.review);
                 } else {
