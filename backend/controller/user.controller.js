@@ -6,7 +6,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const path = require('path');
 const fs = require('fs');
-const User = require("../models/User");
+const User = require("../models/user.model");
 const MessageServices = require("../services/message.services");
 const nodemailer = require("nodemailer");
 
