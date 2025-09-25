@@ -1,13 +1,13 @@
 // backend/services/user.services.js
-const UserModel = require("../../models/user.model");
+const UserModel = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const JWT_SECRET = "yourSuperSecretKey123!";
 const JWT_EXPIRE = "1h";
-const ExamAttempt = require('../../models/ExamAttempt');
-const User = require('../../models/user.model');
+const ExamAttempt = require('../models/ExamAttempt');
+const User = require('../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 
 class UserServices {

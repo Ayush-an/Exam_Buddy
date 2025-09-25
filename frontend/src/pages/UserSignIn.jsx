@@ -1,4 +1,3 @@
-// UserSignIn.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -13,10 +12,7 @@ export default function UserSignIn() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prevForm => ({
-      ...prevForm,
-      [name]: value
-    }));
+    setForm(prevForm => ({ ...prevForm, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -47,6 +43,25 @@ export default function UserSignIn() {
     }
   };
 
+  // -------- Forgot Password Handler --------
+  const handleForgotPassword = async () => {
+    if (!form.mobile) {
+      toast.error('Please enter your registered mobile number first.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await axios.post(`${API_BASE_URL}/api/user/forgot-password`, { mobile: form.mobile });
+      toast.success(res.data.message || 'Password reset link sent successfully!');
+    } catch (err) {
+      console.error('Forgot password error:', err.response ? err.response.data : err.message);
+      toast.error(err.response?.data?.message || 'Failed to send password reset link.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center w-full min-h-screen px-4 bg-gray-100">
       <form onSubmit={handleSubmit} className="w-full max-w-sm p-8 space-y-6 bg-white shadow-2xl rounded-xl">
@@ -56,11 +71,9 @@ export default function UserSignIn() {
           <label htmlFor="mobile" className="block mb-1 text-sm font-medium text-gray-700">
             Mobile Number
           </label>
-          <input type="tel" id="mobile" name="mobile"  value={form.mobile}
-            onChange={handleChange}
+          <input type="tel" id="mobile" name="mobile" value={form.mobile} onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-            placeholder="Your mobile number" required disabled={loading}
-          />
+            placeholder="Your mobile number" required disabled={loading} />
         </div>
 
         <div>
@@ -70,6 +83,10 @@ export default function UserSignIn() {
           <input type="password" id="password" name="password" value={form.password} onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
             placeholder="********" required disabled={loading} />
+          <p className="mt-1 text-sm text-right text-blue-600 cursor-pointer hover:underline"
+             onClick={handleForgotPassword}>
+            Forgot Password?
+          </p>
         </div>
 
         <button type="submit"
@@ -87,8 +104,7 @@ export default function UserSignIn() {
         </button>
 
         <p className="mt-4 text-sm text-center text-gray-600">
-          New user? <t className="font-medium text-blue-600">Then Sign Up</t>{' '}
-          
+          New user? <t className="font-medium text-blue-600 cursor-pointer" onClick={() => navigate('/signup')}>Sign Up</t>
         </p>
       </form>
     </div>

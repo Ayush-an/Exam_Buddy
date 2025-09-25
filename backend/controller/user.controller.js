@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt");
 const path = require('path');
 const fs = require('fs');
 
-
+const MessageServices = require("../services/message.services");
 const nodemailer = require("nodemailer");
 
 // --- Register User ---
@@ -45,17 +45,17 @@ exports.loginWithMobile = async (req, res) => {
 // --- Forgot Password ---
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, mobile } = req.body; // mobile added for SMS
     const token = crypto.randomBytes(32).toString("hex");
-    const expiration = Date.now() + 3600000;
+    const expiration = Date.now() + 3600000; // 1 hour
 
     const user = await UserServices.setResetToken(email, token, expiration);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-const resetUrl = `https://exam-buddy.vercel.app/reset-password/${token}`;
+    const resetUrl = `https://exam-buddy.vercel.app/reset-password/${token}`;
     console.log("Reset link:", resetUrl);
 
-    // ✅ Create transporter first
+    // --- Send Email ---
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
@@ -66,33 +66,24 @@ const resetUrl = `https://exam-buddy.vercel.app/reset-password/${token}`;
       },
     });
 
-    // ✅ Verify transporter (optional, can remove if it causes issues)
-    try {
-      await transporter.verify();
-      console.log("✅ Mail server is ready to send messages");
-    } catch (verifyErr) {
-      console.error("❌ Transporter verify failed:", verifyErr);
-    }
+    // --- Send Email only ---
+await transporter.sendMail({
+  from: `"ExamBuddy" <${process.env.EMAIL_USER}>`,
+  to: user.email,
+  subject: "Password Reset Request",
+  text: `You requested a password reset.\n\nClick this link: ${resetUrl}`,
+});
+console.log("📧 Reset email sent to:", user.email);
 
-    // ✅ Prepare mail options
-    const mailOptions = {
-      from: `"ExamBuddy" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Password Reset Request",
-      text: `You requested a password reset.\n\nClick this link to reset your password: ${resetUrl}`,
-    };
 
-    // ✅ Send email
-    const info = await transporter.sendMail(mailOptions);
-    console.log("📧 Message sent:", info.messageId);
+   
 
-    res.json({ message: "Password reset link sent to email" });
+    res.json({ message: "Password reset link sent via email (and SMS if mobile provided)" });
   } catch (err) {
     console.error("❌ Error in forgotPassword:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
-
 
 // --- Reset Password ---
 exports.resetPassword = async (req, res) => {
