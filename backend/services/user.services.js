@@ -232,13 +232,12 @@ class UserServices {
   }
 
   static async setResetToken(email, token, expiration, mobile) {
-  // Find user by email OR mobile
   const filter = email ? { email } : mobile ? { mobile } : null;
   if (!filter) return null;
 
   const user = await UserModel.findOneAndUpdate(
     filter,
-    { resetToken: token, resetTokenExpiration: expiration },
+    { resetPasswordToken: token, resetPasswordExpires: expiration },
     { new: true }
   );
 
@@ -246,20 +245,21 @@ class UserServices {
 }
 
 
+
   static async resetPassword(token, newPassword) {
-    const user = await UserModel.findOne({
-      resetToken: token,
-      resetTokenExpiration: { $gt: Date.now() },
-    });
-    if (!user) {
-      throw new Error("Invalid or expired reset token");
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiration = undefined;
-    return await user.save();
-  }
+  const user = await UserModel.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) throw new Error("Invalid or expired reset token");
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  return await user.save();
+}
 
   static generateAccessToken(tokenData) {
     return jwt.sign(tokenData, JWT_SECRET, { expiresIn: JWT_EXPIRE });

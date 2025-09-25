@@ -6,7 +6,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const path = require('path');
 const fs = require('fs');
-
+const User = require("../models/User");
 const MessageServices = require("../services/message.services");
 const nodemailer = require("nodemailer");
 
@@ -45,28 +45,32 @@ exports.loginWithMobile = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email, mobile } = req.body;
+
+    if (!email && !mobile) {
+      return res.status(400).json({ message: "Email or mobile is required" });
+    }
+
+    // --- Generate reset token & expiration ---
     const token = crypto.randomBytes(32).toString("hex");
     const expiration = Date.now() + 3600000; // 1 hour
 
-    // Find user by email or mobile
-    const user = await UserServices.setResetToken(
-      email ? email : undefined,
-      token,
-      expiration,
-      mobile ? mobile : undefined
-    );
+    // --- Save token using service ---
+    const user = await UserServices.setResetToken(email, token, expiration, mobile);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-
+    // --- Reset URL ---
     const resetUrl = `https://exam-buddy.vercel.app/reset-password/${token}`;
     console.log("Reset link:", resetUrl);
 
-    // Send email
+    // --- Send email ---
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     await transporter.sendMail({
@@ -77,10 +81,10 @@ exports.forgotPassword = async (req, res) => {
     });
 
     console.log("📧 Reset email sent to:", user.email);
-    res.json({ message: "Password reset link sent to user's email." });
+    return res.json({ message: "Password reset link sent to user's email." });
   } catch (err) {
     console.error("❌ Error in forgotPassword:", err);
-    res.status(500).json({ error: err.message || "Internal Server Error" });
+    return res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
