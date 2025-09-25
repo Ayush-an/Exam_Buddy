@@ -392,5 +392,5 @@ bg-gradient-to-br from-purple-600 via-purple-500 to-purple-600 rounded-3xl shado
                     <AnimatePresence mode="wait">  <motion.div key={currentPhase} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}  transition={{ duration: 0.3 }} className="w-full" >
                         {currentPhase === 'dashboard' && renderDashboard()} {currentPhase === 'selectSet' && renderSelectSet()} {currentPhase === 'confirmExamStart' && renderConfirmExamStart()}
                         {currentPhase === 'examInProgress' && renderExamInProgress()} {currentPhase === 'examSubmitted' && renderExamSubmitted()}  </motion.div>
-                    </AnimatePresence>   </section> </main></div>);
+                    </AnimatePresence>  </section> </main></div>);
 }

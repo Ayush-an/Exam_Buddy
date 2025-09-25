@@ -1,5 +1,4 @@
 // D:\Exam-portel\backend\controller\question.controller.js
-
 const questionServices = require('../services/question.services');
 const { Question } = require('../models/question.model');
 const mongoose = require('mongoose');
@@ -433,15 +432,7 @@ async function bulkUploadQuestions(req, res) {
       const questionAudio = row.questionAudio || null;
 
       questionsToSave.push({
-        category,
-        section,
-        set,
-        questionText,
-        questionImage,
-        questionAudio,
-        options,
-        correctAnswer,
-        marks,
+        category, section, set, questionText, questionImage, questionAudio, options, correctAnswer, marks,
       });
     }
 
@@ -468,7 +459,6 @@ async function bulkUploadQuestions(req, res) {
     }
   }
 }
-
 
 // --- Module Exports ---
 module.exports = {

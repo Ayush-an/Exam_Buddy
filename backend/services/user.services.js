@@ -1,12 +1,13 @@
-const UserModel = require("../models/user.model");
+// backend/services/user.services.js
+const UserModel = require("../../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const JWT_SECRET = "yourSuperSecretKey123!";
 const JWT_EXPIRE = "1h";
-const ExamAttempt = require('../models/ExamAttempt');
-const User = require('../models/user.model');
+const ExamAttempt = require('../../models/ExamAttempt');
+const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 
 class UserServices {
@@ -34,14 +35,8 @@ class UserServices {
   static async registerUser(userData) {
     try {
       let {
-        firstName,
-        lastName,
-        mobile,
-        parentMobile,
-        whatsapp,
-        email,
-        dob,
-        password,
+        firstName, lastName, mobile, parentMobile,
+        whatsapp, email, dob, password,
         packagePurchased = "Free",
         planSubscription = null,
         profileImage = "",
@@ -52,21 +47,11 @@ class UserServices {
         throw new Error("User with this email already exists");
       }
       const newUser = new UserModel({
-        firstName,
-        lastName,
-        mobile,
-        parentMobile,
-        whatsapp,
-        email,
-        dob,
-        password,
-        packagePurchased,
-        planSubscription,
-        profileImage,
-        score: 0,
-        papersAttempted: 0,
-        examHistory: [],
-        isActive: true,
+        firstName, lastName, mobile, parentMobile,
+        whatsapp, email, dob, password,
+        packagePurchased, planSubscription,
+        profileImage, score: 0, papersAttempted: 0,
+        examHistory: [], isActive: true,
       });
 
       const savedUser = await newUser.save();

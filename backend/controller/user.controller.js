@@ -1,4 +1,4 @@
-// D:\\Exam-portel\\backend\\controller\\user.controller.js
+// backend/controller/user.controller.js
 const UserServices = require('../services/user.services');
 const { Question } = require('../models/question.model');
 const mongoose = require('mongoose');
@@ -6,6 +6,9 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const path = require('path');
 const fs = require('fs');
+
+
+const nodemailer = require("nodemailer");
 
 // --- Register User ---
 exports.register = async (req, res) => {
@@ -30,10 +33,7 @@ exports.loginWithMobile = async (req, res) => {
   try {
     const { user, token } = await UserServices.loginWithMobile(mobile, password?.trim());
     return res.json({
-      status: true,
-      message: "Login successful",
-      user,
-      token
+      status: true, message: "Login successful", user, token
     });
   } catch (error) {
     console.error("Error in loginWithMobile controller:", error);
@@ -48,22 +48,56 @@ exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     const token = crypto.randomBytes(32).toString("hex");
     const expiration = Date.now() + 3600000;
+
     const user = await UserServices.setResetToken(email, token, expiration);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    console.log(`Reset link: http://yourdomain.com/reset-password/${token}`);
+const resetUrl = `https://exam-buddy.vercel.app/reset-password/${token}`;
+    console.log("Reset link:", resetUrl);
+
+    // ✅ Create transporter first
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // ✅ Verify transporter (optional, can remove if it causes issues)
+    try {
+      await transporter.verify();
+      console.log("✅ Mail server is ready to send messages");
+    } catch (verifyErr) {
+      console.error("❌ Transporter verify failed:", verifyErr);
+    }
+
+    // ✅ Prepare mail options
+    const mailOptions = {
+      from: `"ExamBuddy" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `You requested a password reset.\n\nClick this link to reset your password: ${resetUrl}`,
+    };
+
+    // ✅ Send email
+    const info = await transporter.sendMail(mailOptions);
+    console.log("📧 Message sent:", info.messageId);
+
     res.json({ message: "Password reset link sent to email" });
   } catch (err) {
-    console.error("Error in forgotPassword:", err);
+    console.error("❌ Error in forgotPassword:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
+
 // --- Reset Password ---
 exports.resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    const { token } = req.params; const { password } = req.body;
     const user = await UserServices.resetPassword(token, password?.trim());
     if (!user) return res.status(400).json({ message: "Invalid or expired token" });
     res.json({ message: "Password reset successfully" });
@@ -102,9 +136,7 @@ exports.getUserByMobile = async (req, res) => {
 // --- Update Profile ---
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.params.id;
-    const updateData = { ...req.body };
-    delete updateData.profileImage;
+    const userId = req.params.id; const updateData = { ...req.body }; delete updateData.profileImage;
     const updatedUser = await UserServices.updateUser(userId, updateData);
     if (!updatedUser) {
       return res.status(404).json({ status: false, message: "User not found" });
@@ -125,9 +157,7 @@ exports.getProfileImage = async (req, res) => {
       return res.status(404).json({ status: false, message: "Profile image not found for this user." });
     }
     res.status(200).json({
-      status: true,
-      profileImage: profileImagePath,
-      message: "Profile image path fetched successfully."
+      status: true, profileImage: profileImagePath, message: "Profile image path fetched successfully."
     });
   } catch (error) {
     console.error("Error in getProfileImage controller:", error);
@@ -158,9 +188,7 @@ exports.uploadProfileImage = async (req, res, next) => {
       return res.status(500).json({ status: false, message: "Failed to update user with new profile image." });
     }
     res.status(200).json({
-      status: true,
-      message: "Profile image uploaded successfully",
-      user: updatedUser,
+      status: true, message: "Profile image uploaded successfully", user: updatedUser,
     });
   } catch (error) {
     console.error("Error in uploadProfileImage controller:", error);
@@ -188,9 +216,7 @@ exports.deleteProfileImage = async (req, res, next) => {
       return res.status(500).json({ status: false, message: "Failed to clear profile image in database." });
     }
     res.status(200).json({
-      status: true,
-      message: "Profile image deleted successfully",
-      user: updatedUser,
+      status: true, message: "Profile image deleted successfully", user: updatedUser,
     });
   } catch (error) {
     console.error("Error in deleteProfileImage controller:", error);
@@ -229,10 +255,8 @@ exports.submitExamResults = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: 'Invalid User ID format.' });
     }
-    let calculatedScore = 0;
-    let totalMarksPossible = 0;
-    let correctAnswersCount = 0;
-    let totalQuestionsCount = answers.length;
+    let calculatedScore = 0; let totalMarksPossible = 0;
+    let correctAnswersCount = 0; let totalQuestionsCount = answers.length;
 
     const questionIds = answers.map(a => new mongoose.Types.ObjectId(a.questionId));
     const questions = await Question.find({ _id: { $in: questionIds } });
@@ -244,27 +268,21 @@ exports.submitExamResults = async (req, res) => {
       const isCorrect = a.isCorrect;
       const awarded = isCorrect ? marks : 0;
       if (isCorrect) correctAnswersCount++;
-      calculatedScore += awarded;
-      totalMarksPossible += marks;
+      calculatedScore += awarded; totalMarksPossible += marks;
       return { questionId: a.questionId, selectedOption: a.selectedOption, isCorrect, marksAwarded: awarded };
     });
 
     const newAttempt = await UserServices.saveExamResult({
-      userId, category, section, set,
-      score: calculatedScore,
-      totalMarksPossible,
-      totalQuestions: totalQuestionsCount,
-      correctAnswers: correctAnswersCount,
-      duration,
-      answers: processedAnswers,
-      submittedAt: new Date(),
+      userId, category, section, set, score: calculatedScore,
+      totalMarksPossible, totalQuestions: totalQuestionsCount,
+      correctAnswers: correctAnswersCount, duration,
+      answers: processedAnswers, submittedAt: new Date(),
     });
 
     res.status(201).json({
       message: 'Exam results submitted successfully!',
       examResult: {
-        mongoId: newAttempt._id,
-        score: newAttempt.score,
+        mongoId: newAttempt._id, score: newAttempt.score,
         totalMarksPossible: newAttempt.totalMarksPossible,
         totalQuestions: newAttempt.totalQuestions,
         correctAnswers: newAttempt.correctAnswers,

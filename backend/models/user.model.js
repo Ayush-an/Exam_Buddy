@@ -1,3 +1,4 @@
+// backend/models/user.model.js
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
 const { Schema } = mongoose;
@@ -55,8 +56,8 @@ userSchema.pre("save", async function (next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified("password")) return next();
   try {
-    const salt = await bcrypt.genSalt(10); // Generate a salt
-    const hash = await bcrypt.hash(this.password, salt); // Hash the password with the salt
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(this.password, salt);
     this.password = hash; // Store the hashed password
     next();
   } catch (err) {
