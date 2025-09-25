@@ -42,43 +42,42 @@ exports.loginWithMobile = async (req, res) => {
   }
 };
 
-// --- Forgot Password ---
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email, mobile } = req.body; // mobile added for SMS
+    const { email, mobile } = req.body;
     const token = crypto.randomBytes(32).toString("hex");
     const expiration = Date.now() + 3600000; // 1 hour
 
-    const user = await UserServices.setResetToken(email, token, expiration);
+    // Find user by email or mobile
+    const user = await UserServices.setResetToken(
+      email ? email : undefined,
+      token,
+      expiration,
+      mobile ? mobile : undefined
+    );
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const resetUrl = `https://exam-buddy.vercel.app/reset-password/${token}`;
     console.log("Reset link:", resetUrl);
 
-    // --- Send Email ---
+    // Send email
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
       secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
     });
 
-    // --- Send Email only ---
-await transporter.sendMail({
-  from: `"ExamBuddy" <${process.env.EMAIL_USER}>`,
-  to: user.email,
-  subject: "Password Reset Request",
-  text: `You requested a password reset.\n\nClick this link: ${resetUrl}`,
-});
-console.log("📧 Reset email sent to:", user.email);
+    await transporter.sendMail({
+      from: `"ExamBuddy" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `You requested a password reset.\n\nClick this link: ${resetUrl}`,
+    });
 
-
-   
-
-    res.json({ message: "Password reset link sent via email (and SMS if mobile provided)" });
+    console.log("📧 Reset email sent to:", user.email);
+    res.json({ message: "Password reset link sent to user's email." });
   } catch (err) {
     console.error("❌ Error in forgotPassword:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });

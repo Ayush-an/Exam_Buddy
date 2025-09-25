@@ -231,13 +231,20 @@ class UserServices {
     }
   }
 
-  static async setResetToken(email, token, expiration) {
-    return await UserModel.findOneAndUpdate(
-      { email },
-      { resetToken: token, resetTokenExpiration: expiration },
-      { new: true }
-    );
-  }
+  static async setResetToken(email, token, expiration, mobile) {
+  // Find user by email OR mobile
+  const filter = email ? { email } : mobile ? { mobile } : null;
+  if (!filter) return null;
+
+  const user = await UserModel.findOneAndUpdate(
+    filter,
+    { resetToken: token, resetTokenExpiration: expiration },
+    { new: true }
+  );
+
+  return user;
+}
+
 
   static async resetPassword(token, newPassword) {
     const user = await UserModel.findOne({

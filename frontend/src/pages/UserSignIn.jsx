@@ -1,3 +1,4 @@
+// UserSignIn.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -44,23 +45,30 @@ export default function UserSignIn() {
   };
 
   // -------- Forgot Password Handler --------
-  const handleForgotPassword = async () => {
-    if (!form.mobile) {
-      toast.error('Please enter your registered mobile number first.');
-      return;
-    }
+const handleForgotPassword = async () => {
+  if (!form.mobile && !form.email) {
+    toast.error('Please enter your registered mobile number or email first.');
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const res = await axios.post(`${API_BASE_URL}/api/user/forgot-password`, { mobile: form.mobile });
-      toast.success(res.data.message || 'Password reset link sent successfully!');
-    } catch (err) {
-      console.error('Forgot password error:', err.response ? err.response.data : err.message);
-      toast.error(err.response?.data?.message || 'Failed to send password reset link.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+
+    // Send whichever is provided (mobile or email)
+    const payload = {};
+    if (form.mobile) payload.mobile = form.mobile;
+    if (form.email) payload.email = form.email;
+
+    const res = await axios.post(`${API_BASE_URL}/api/user/forgot-password`, payload);
+    toast.success(res.data.message || 'Password reset link sent successfully!');
+  } catch (err) {
+    console.error('Forgot password error:', err.response ? err.response.data : err.message);
+    toast.error(err.response?.data?.message || 'Failed to send password reset link.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center w-full min-h-screen px-4 bg-gray-100">
